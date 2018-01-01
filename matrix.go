@@ -12,9 +12,8 @@ type MatrixMessage struct {
 }
 
 var client *matrix.Client
-var roomID string
 
-func sendMessage(plain, html string) error {
+func sendMessage(roomID, plain, html string) error {
 	_, err := client.SendMessageEvent(roomID, "m.room.message",
 		&MatrixMessage{
 			MsgType:       "m.text",
