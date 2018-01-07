@@ -1,0 +1,12 @@
+[Unit]
+Description=Alerts from Alertmanager to Matrix
+After=network-online.target
+
+[Service]
+Restart=always
+DynamicUser=yes
+EnvironmentFile=/etc/default/alertmanager-matrix
+ExecStart=/usr/local/bin/alertmanager-matrix
+
+[Install]
+WantedBy=multi-user.target
