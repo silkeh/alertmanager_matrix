@@ -81,8 +81,6 @@ func main() {
 		setMapFromJsonFile(&alertColors, colorFile)
 	}
 
-	log.Printf("%+v\n%+v\n", alertIcons, alertColors)
-
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
 	client, err = matrix.NewClient(homeserver, userID, token)
 	if err != nil {

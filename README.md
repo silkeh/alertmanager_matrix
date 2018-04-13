@@ -3,8 +3,8 @@ Service for sending alerts from the Alertmanager webhook to a Matrix room.
 
 ## Usage
 The service is configured either through command line arguments or environment variables.
-With the provided systemd service file (`alertmanager-matrix.service`),
-the configuration is done in `/etc/default/alertmanager-matrix` as follows:
+With the provided systemd service file (`alertmanager_matrix.service`),
+the configuration is done in `/etc/default/alertmanager_matrix` as follows:
 
 ```sh
 HOMESERVER=http://localhost:8008

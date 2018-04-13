@@ -5,8 +5,8 @@ After=network-online.target
 [Service]
 Restart=always
 DynamicUser=yes
-EnvironmentFile=/etc/default/alertmanager-matrix
-ExecStart=/usr/local/bin/alertmanager-matrix
+EnvironmentFile=/etc/default/alertmanager_matrix
+ExecStart=/usr/local/bin/alertmanager_matrix
 
 [Install]
 WantedBy=multi-user.target
