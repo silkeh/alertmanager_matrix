@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-var alertEmoji = map[string]string{
+var alertIcons = map[string]string{
 	"alert":    "🔔️",
 	"warning":  "⚠️",
 	"critical": "😱",
@@ -25,7 +25,7 @@ var alertColors = map[string]string{
 }
 
 func emoji(t string) string {
-	if e, ok := alertEmoji[t]; ok {
+	if e, ok := alertIcons[t]; ok {
 		return e
 	}
 	log.Printf("Unknown status: %s", t)

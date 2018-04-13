@@ -43,21 +43,45 @@ func setStringFromEnv(target *string, env string) {
 	}
 }
 
+func setMapFromJsonFile(m *map[string]string, fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal("Unable to open JSON file: ", err)
+	}
+	err = json.NewDecoder(file).Decode(m)
+	if err != nil {
+		log.Fatal("Unable to parse JSON file: ", err)
+	}
+}
+
 func main() {
 	var addr string
-	var homeserver, userID, token string
+	var homeserver, userID, token, iconFile, colorFile string
 	var err error
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&homeserver, "homeserver", "https://matrix.org", "Homeserver to connect to.")
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
+	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
+	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
 	flag.Parse()
 
+	// Set variables from the environment
 	setStringFromEnv(&addr, "ADDR")
 	setStringFromEnv(&homeserver, "HOMESERVER")
 	setStringFromEnv(&userID, "USER_ID")
 	setStringFromEnv(&token, "TOKEN")
+
+	// Load mappings from files
+	if iconFile != "" {
+		setMapFromJsonFile(&alertIcons, iconFile)
+	}
+	if colorFile != "" {
+		setMapFromJsonFile(&alertColors, colorFile)
+	}
+
+	log.Printf("%+v\n%+v\n", alertIcons, alertColors)
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
 	client, err = matrix.NewClient(homeserver, userID, token)

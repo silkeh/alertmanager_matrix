@@ -4,7 +4,7 @@ Service for sending alerts from the Alertmanager webhook to a Matrix room.
 ## Usage
 The service is configured either through command line arguments or environment variables.
 With the provided systemd service file (`alertmanager-matrix.service`),
-the configuration is done in `/etc/default/alertmanager-matrix` as follows: 
+the configuration is done in `/etc/default/alertmanager-matrix` as follows:
 
 ```sh
 HOMESERVER=http://localhost:8008
@@ -25,3 +25,28 @@ receivers:
 ```
 
 The service will *not* automatically join configured rooms.
+
+The icons and colors can be configured by providing a JSON file.
+The defaults are:
+
+```json
+{
+	"alert": "🔔️",
+	"warning":"⚠️",
+	"critical": "😱",
+	"ok": "😄",
+	"up": "😄",
+	"down": "😱"
+}
+```
+
+```json
+{
+	"alert": "black",
+	"warning": "orange",
+	"critical": "red",
+	"ok": "green",
+	"up": "green",
+	"down": "red"
+}
+```
