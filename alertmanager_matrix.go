@@ -65,6 +65,7 @@ func main() {
 	flag.StringVar(&alertmanager, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
+	flag.StringVar(&messageType, "message-type", "m.notice", "Type of message the bot uses.")
 	flag.Parse()
 
 	// Set variables from the environment

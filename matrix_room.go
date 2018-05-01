@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var messageType = "m.notice"
+
 type Room struct {
 	ID string
 	*matrix.Client
@@ -24,7 +26,7 @@ func (r *Room) sendMarkdownMessage(md string) error {
 func (r *Room) sendText(plain string) error {
 	_, err := r.SendMessageEvent(r.ID, "m.room.message",
 		&MatrixMessage{
-			MsgType: "m.notice",
+			MsgType: messageType,
 			Body:    plain,
 		},
 	)
@@ -35,7 +37,7 @@ func (r *Room) sendText(plain string) error {
 func (r *Room) sendMessage(plain, html string) error {
 	_, err := r.SendMessageEvent(r.ID, "m.room.message",
 		&MatrixMessage{
-			MsgType:       "m.notice",
+			MsgType:       messageType,
 			Format:        "org.matrix.custom.html",
 			Body:          plain,
 			FormattedBody: html,
