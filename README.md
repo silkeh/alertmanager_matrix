@@ -31,22 +31,22 @@ The defaults are:
 
 ```json
 {
-	"alert": "🔔️",
-	"warning":"⚠️",
-	"critical": "😱",
-	"ok": "😄",
-	"up": "😄",
-	"down": "😱"
+	"alert":       "🔔️",
+	"information": "ℹ",
+	"warning":     "⚠️",
+	"critical":    "🚨",
+	"ok":          "✅",
+	"silenced":    "🔕"
 }
 ```
 
 ```json
 {
-	"alert": "black",
-	"warning": "orange",
-	"critical": "red",
-	"ok": "green",
-	"up": "green",
-	"down": "red"
+	"alert":       "black",
+	"information": "blue",
+	"warning":     "orange",
+	"critical":    "red",
+	"ok":          "green",
+	"silenced":    "gray"
 }
 ```

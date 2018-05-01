@@ -4,24 +4,27 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	alertmanager "github.com/prometheus/alertmanager/client"
+	"github.com/prometheus/alertmanager/types"
 )
 
 var alertIcons = map[string]string{
-	"alert":    "🔔️",
-	"warning":  "⚠️",
-	"critical": "😱",
-	"ok":       "😄",
-	"up":       "😄",
-	"down":     "😱",
+	"alert":       "🔔️",
+	"information": "ℹ",
+	"warning":     "⚠️",
+	"critical":    "🚨",
+	"ok":          "✅",
+	"silenced":    "🔕",
 }
 
 var alertColors = map[string]string{
-	"alert":    "black",
-	"warning":  "orange",
-	"critical": "red",
-	"ok":       "green",
-	"up":       "green",
-	"down":     "red",
+	"alert":       "black",
+	"information": "blue",
+	"warning":     "orange",
+	"critical":    "red",
+	"ok":          "green",
+	"silenced":    "gray",
 }
 
 func emoji(t string) string {
