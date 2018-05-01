@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/gorilla/mux"
-	matrix "github.com/matrix-org/gomatrix"
 	"log"
 	"net/http"
 	"os"
@@ -12,9 +11,9 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	roomID := mux.Vars(r)["room"]
-	if roomID[0] != '!' {
-		log.Print("Invalid room ID: ", roomID)
+	room := Room{mux.Vars(r)["room"], client}
+	if room.ID[0] != '!' {
+		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -29,9 +28,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// Create readable messages for Matrix
 	plain, html := formatAlerts(data.Alerts)
-	log.Printf("Sending message to %s:\n%s", roomID, plain)
+	log.Printf("Sending message to %s: %s", room.ID, plain)
 
-	if err := sendMessage(roomID, plain, html); err != nil {
+	if err := room.sendMessage(plain, html); err != nil {
 		log.Printf("Error sending message: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -56,13 +55,14 @@ func setMapFromJsonFile(m *map[string]string, fileName string) {
 
 func main() {
 	var addr string
-	var homeserver, userID, token, iconFile, colorFile string
+	var homeserver, userID, token, alertmanager, iconFile, colorFile string
 	var err error
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&homeserver, "homeserver", "https://matrix.org", "Homeserver to connect to.")
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
+	flag.StringVar(&alertmanager, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
 	flag.Parse()
@@ -82,9 +82,15 @@ func main() {
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
-	client, err = matrix.NewClient(homeserver, userID, token)
+	err = startMatrixClient(homeserver, userID, token)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
+	}
+
+	log.Printf("Connecting to Alertmanager at %s", alertmanager)
+	err = startAlertmanagerClient(alertmanager)
+	if err != nil {
+		log.Fatalf("Error connecting to AlertManager: %s", err)
 	}
 
 	r := mux.NewRouter()

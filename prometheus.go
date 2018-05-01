@@ -1,14 +1,12 @@
 package main
 
-import "time"
+import (
+	alertmanager "github.com/prometheus/alertmanager/client"
+)
 
 type Alert struct {
+	alertmanager.Alert
 	Status       string
-	GeneratorURL string
-	Labels       map[string]string
-	Annotations  map[string]string
-	StartsAt     time.Time
-	EndsAt       time.Time
 }
 
 type Message struct {
@@ -20,5 +18,5 @@ type Message struct {
 	CommonLabels      map[string]string
 	CommonAnnotations map[string]string
 	ExternalURL       string
-	Alerts            []Alert
+	Alerts            []*Alert
 }

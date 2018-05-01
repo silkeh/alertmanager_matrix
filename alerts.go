@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	alertmanager "github.com/prometheus/alertmanager/client"
 	"github.com/prometheus/alertmanager/types"
 )
 
@@ -53,7 +52,7 @@ func createMessage(status, name, summary string) (plain, html string) {
 	return
 }
 
-func formatAlerts(alerts []Alert) (string, string) {
+func formatAlerts(alerts []*Alert) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
 
@@ -61,18 +60,20 @@ func formatAlerts(alerts []Alert) (string, string) {
 		status := "alert"
 		if a.Status == "resolved" {
 			status = "ok"
+		} else if a.Status == "suppressed" {
+			status = "silenced"
 		} else if sev, ok := a.Labels["severity"]; ok {
-			status = sev
+			status = string(sev)
 		}
 
 		summary := ""
 		if v, ok := a.Annotations["summary"]; ok {
-			summary = v
+			summary = string(v)
 		}
 
 		alertName := ""
 		if v, ok := a.Labels["alertname"]; ok {
-			alertName = v
+			alertName = string(v)
 		}
 
 		plain[i], html[i] = createMessage(status, alertName, summary)
@@ -82,4 +83,33 @@ func formatAlerts(alerts []Alert) (string, string) {
 	htmlBody := strings.Join(html, "<br/>")
 
 	return plainBody, htmlBody
+}
+
+func formatSilences(silences []*types.Silence) (string, string) {
+	plain := ""
+
+	for _, s := range silences {
+		if s.Status.State != "active" {
+			continue
+		}
+
+		plain += fmt.Sprintf(
+			"**Silence %s**  \n"+
+				"Ends %s\n\n",
+			s.ID,
+			s.EndsAt.Format("2006-01-02 15:04"),
+		)
+
+		matchers := make([]string, len(s.Matchers))
+		for i, m := range s.Matchers {
+			sep := "="
+			if m.IsRegex {
+				sep = "=~"
+			}
+			matchers[i] = fmt.Sprintf("`%s%s%q`", m.Name, sep, m.Value)
+		}
+		plain += strings.Join(matchers, ", ") + "\n\n"
+	}
+
+	return plain, markdown(plain)
 }

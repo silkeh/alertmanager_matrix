@@ -1,0 +1,38 @@
+package main
+
+import (
+	"gopkg.in/russross/blackfriday.v2"
+	"regexp"
+	"strconv"
+	"time"
+)
+
+var durationRegex = regexp.MustCompile(`(\d+)(\w)`)
+
+// markdown converts Markdown to HTML
+func markdown(md string) string {
+	return string(blackfriday.Run([]byte(md),
+		blackfriday.WithExtensions(blackfriday.CommonExtensions)))
+}
+
+func parseDuration(s string) (time.Duration, error) {
+	m := durationRegex.FindStringSubmatch(s)
+	if m == nil {
+		return time.ParseDuration(s)
+	}
+	i, err := strconv.Atoi(m[1])
+	if err != nil {
+		return time.ParseDuration(s)
+	}
+
+	switch m[2] {
+	case `d`:
+		return time.Duration(i*24) * time.Hour, nil
+	case `w`:
+		return time.Duration(i*24*7) * time.Hour, nil
+	case `y`:
+		return time.Duration(i*24*365) * time.Hour, nil
+	default:
+		return time.ParseDuration(s)
+	}
+}
