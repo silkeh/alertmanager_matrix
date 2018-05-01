@@ -85,18 +85,23 @@ func formatAlerts(alerts []*Alert) (string, string) {
 	return plainBody, htmlBody
 }
 
-func formatSilences(silences []*types.Silence) (string, string) {
+func formatSilences(silences []*types.Silence, state string) (string, string) {
 	plain := ""
 
 	for _, s := range silences {
-		if s.Status.State != "active" {
+		if s.Status.State != types.SilenceState(state) {
 			continue
 		}
 
+		endStr := "Ends"
+		if s.Status.State == "expired" {
+			endStr = "Ended"
+		}
+
 		plain += fmt.Sprintf(
-			"**Silence %s**  \n"+
-				"Ends %s\n\n",
+			"**Silence %s**  \n%s at %s\n\n",
 			s.ID,
+			endStr,
 			s.EndsAt.Format("2006-01-02 15:04"),
 		)
 

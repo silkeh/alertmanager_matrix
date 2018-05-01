@@ -58,7 +58,7 @@ func (r *Room) sendAlerts(silenced bool) error {
 	as := make([]*Alert, len(alerts))
 	for i, a := range alerts {
 		as[i] = &Alert{
-			Alert: a.Alert,
+			Alert:  a.Alert,
 			Status: string(a.Status.State),
 		}
 	}
@@ -68,16 +68,18 @@ func (r *Room) sendAlerts(silenced bool) error {
 }
 
 // sendSilences sends silences to a room
-func (r *Room) sendSilences() error {
+func (r *Room) sendSilences(state string) error {
 	silences, err := am.silence.List(context.TODO(), "")
 	if err != nil {
 		return r.sendText(err.Error())
 	}
-	if len(silences) == 0 {
-		return r.sendText("No silences")
+
+	plain, html := formatSilences(silences, state)
+
+	if plain == "" {
+		return r.sendText(fmt.Sprintf("No %s silences", state))
 	}
 
-	plain, html := formatSilences(silences)
 	return r.sendMessage(plain, html)
 }
 

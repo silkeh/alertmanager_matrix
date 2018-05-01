@@ -6,7 +6,7 @@ import (
 
 type Alert struct {
 	alertmanager.Alert
-	Status       string
+	Status string
 }
 
 type Message struct {

@@ -8,11 +8,14 @@ import (
 )
 
 const (
-	helpMessage = "Available commands are:\n\n" +
+	helpMessage = "Usage: !alert <subcommand> [options]\n\n" +
+		"Available subcommands are:\n\n" +
 		"- `help`: shows this message\n" +
 		"- `list`: shows active alerts\n" +
 		"- `list all`: shows active and silenced alerts\n" +
 		"- `silence`: shows active silences\n" +
+		"- `silence pending`: shows pending silences\n" +
+		"- `silence expired`: shows expired silences\n" +
 		"- `silence add <duration> <matchers>`: create a new silence\n" +
 		"- `silence del <ids>`: create a new silence\n"
 )
@@ -89,7 +92,11 @@ func messageHandler(e *matrix.Event) {
 	case "la":
 		err = room.sendAlerts(true)
 	case "s":
-		err = room.sendSilences()
+		err = room.sendSilences("active")
+	case "sp":
+		err = room.sendSilences("pending")
+	case "se":
+		err = room.sendSilences("expired")
 	case "sa":
 		err = room.sendNewSilence(e.Sender, cmd[3:])
 	case "sd":
