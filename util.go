@@ -1,7 +1,6 @@
 package main
 
 import (
-	"gopkg.in/russross/blackfriday.v2"
 	"regexp"
 	"strconv"
 	"time"
@@ -9,12 +8,8 @@ import (
 
 var durationRegex = regexp.MustCompile(`(\d+)(\w)`)
 
-// markdown converts Markdown to HTML
-func markdown(md string) string {
-	return string(blackfriday.Run([]byte(md),
-		blackfriday.WithExtensions(blackfriday.CommonExtensions)))
-}
-
+// parseDuration parses a duration in days weeks or years in addition to
+// the times parsed by time.ParseDuration
 func parseDuration(s string) (time.Duration, error) {
 	m := durationRegex.FindStringSubmatch(s)
 	if m == nil {
