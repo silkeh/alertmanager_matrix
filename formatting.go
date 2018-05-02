@@ -85,8 +85,9 @@ func formatAlerts(alerts []*Alert) (string, string) {
 	return plainBody, htmlBody
 }
 
-func formatSilences(silences []*types.Silence, state string) (string, string) {
-	plain := ""
+// formatSilences formats silences as Markdown.
+func formatSilences(silences []*types.Silence, state string) string {
+	md := ""
 
 	for _, s := range silences {
 		if s.Status.State != types.SilenceState(state) {
@@ -98,7 +99,7 @@ func formatSilences(silences []*types.Silence, state string) (string, string) {
 			endStr = "Ended"
 		}
 
-		plain += fmt.Sprintf(
+		md += fmt.Sprintf(
 			"**Silence %s**  \n%s at %s\n\n",
 			s.ID,
 			endStr,
@@ -113,8 +114,8 @@ func formatSilences(silences []*types.Silence, state string) (string, string) {
 			}
 			matchers[i] = fmt.Sprintf("`%s%s%q`", m.Name, sep, m.Value)
 		}
-		plain += strings.Join(matchers, ", ") + "\n\n"
+		md += strings.Join(matchers, ", ") + "\n\n"
 	}
 
-	return plain, markdown(plain)
+	return md
 }

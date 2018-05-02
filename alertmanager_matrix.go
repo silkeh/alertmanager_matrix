@@ -11,7 +11,7 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	room := Room{mux.Vars(r)["room"], client}
+	room := client.NewRoom(mux.Vars(r)["room"])
 	if room.ID[0] != '!' {
 		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
@@ -30,7 +30,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	plain, html := formatAlerts(data.Alerts)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
-	if err := room.sendMessage(plain, html); err != nil {
+	if _, err := room.SendHTML(plain, html); err != nil {
 		log.Printf("Error sending message: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -83,7 +83,7 @@ func main() {
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
-	err = startMatrixClient(homeserver, userID, token)
+	err := startMatrixClient(homeserver, userID, token, messageType)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
