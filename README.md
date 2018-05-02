@@ -1,5 +1,6 @@
 # alertmanager-matrix
-Service for sending alerts from the Alertmanager webhook to a Matrix room.
+Service for sending alerts from the Alertmanager webhook to a Matrix room
+and managing Alertmanager.
 
 ## Usage
 The service is configured either through command line arguments or environment variables.
