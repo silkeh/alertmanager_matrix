@@ -1,15 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
-	"context"
+	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
 	"git.slxh.eu/prometheus/alertmanager_matrix/matrix"
 	"github.com/prometheus/alertmanager/types"
-	"time"
 )
 
 const (
@@ -26,6 +27,13 @@ const (
 )
 
 var client *matrix.Client
+var am *alertmanager.Client
+
+// Start the Alertmanager client
+func startAlertmanagerClient(url string) (err error) {
+	am, err = alertmanager.NewClient(url)
+	return
+}
 
 // Start the Matrix client
 func startMatrixClient(homeserver, userID, token, messageType string) (err error) {
@@ -120,7 +128,7 @@ func messageHandler(e *matrix.Event) {
 
 // Alerts returns all or non-silenced alerts
 func Alerts(silenced bool) (string, string) {
-	alerts, err := am.alert.List(context.TODO(), "", silenced, false)
+	alerts, err := am.Alert.List(context.TODO(), "", silenced, false)
 	if err != nil {
 		return err.Error(), ""
 	}
@@ -142,7 +150,7 @@ func Alerts(silenced bool) (string, string) {
 
 // Silences returns a Markdown formatted message containing silences with the specified state
 func Silences(state string) string {
-	silences, err := am.silence.List(context.TODO(), "")
+	silences, err := am.Silence.List(context.TODO(), "")
 	if err != nil {
 		return err.Error()
 	}
@@ -188,7 +196,7 @@ func NewSilence(author string, args []string) string {
 		}
 	}
 
-	id, err := am.silence.Set(context.TODO(), silence)
+	id, err := am.Silence.Set(context.TODO(), silence)
 	if err != nil {
 		return err.Error()
 	}
@@ -205,7 +213,7 @@ func DelSilence(ids []string) string {
 	var errors []string
 
 	for _, id := range ids {
-		err := am.silence.Expire(context.TODO(), id)
+		err := am.Silence.Expire(context.TODO(), id)
 		if err != nil {
 			errors = append(errors,
 				fmt.Sprintf("Error deleting %s: %s", id, err))
