@@ -52,7 +52,7 @@ func startMatrixClient(homeserver, userID, token, messageType string) (err error
 	return
 }
 
-// Sync thread
+// sync runs a never ending Matrix sync
 func sync() {
 	for {
 		err := client.Sync()

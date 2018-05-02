@@ -42,7 +42,7 @@ func setStringFromEnv(target *string, env string) {
 	}
 }
 
-func setMapFromJsonFile(m *map[string]string, fileName string) {
+func setMapFromJSONFile(m *map[string]string, fileName string) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal("Unable to open JSON file: ", err)
@@ -54,9 +54,12 @@ func setMapFromJsonFile(m *map[string]string, fileName string) {
 }
 
 func main() {
-	var addr string
-	var homeserver, userID, token, alertmanager, iconFile, colorFile string
-	var err error
+	var (
+		addr                             string // Listen address
+		homeserver, userID, token        string // Matrix connection settings
+		alertmanager                     string // Alertmanager settings
+		iconFile, colorFile, messageType string // Formatting settings
+	)
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&homeserver, "homeserver", "https://matrix.org", "Homeserver to connect to.")
@@ -76,10 +79,10 @@ func main() {
 
 	// Load mappings from files
 	if iconFile != "" {
-		setMapFromJsonFile(&alertIcons, iconFile)
+		setMapFromJSONFile(&alertIcons, iconFile)
 	}
 	if colorFile != "" {
-		setMapFromJsonFile(&alertColors, colorFile)
+		setMapFromJSONFile(&alertColors, colorFile)
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)

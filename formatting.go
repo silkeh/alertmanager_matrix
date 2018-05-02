@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/alertmanager/types"
 )
 
+// alertIcons represent the icons corresponding to the alert status
 var alertIcons = map[string]string{
 	"alert":       "🔔️",
 	"information": "ℹ",
@@ -17,6 +18,7 @@ var alertIcons = map[string]string{
 	"silenced":    "🔕",
 }
 
+// alertColors represent the colors corresponding to the alert status
 var alertColors = map[string]string{
 	"alert":       "black",
 	"information": "blue",
@@ -26,7 +28,8 @@ var alertColors = map[string]string{
 	"silenced":    "gray",
 }
 
-func emoji(t string) string {
+// icon returns the icon for a string
+func icon(t string) string {
 	if e, ok := alertIcons[t]; ok {
 		return e
 	}
@@ -34,6 +37,7 @@ func emoji(t string) string {
 	return "❔"
 }
 
+// color returns the color for string
 func color(t string) string {
 	if c, ok := alertColors[t]; ok {
 		return c
@@ -42,16 +46,18 @@ func color(t string) string {
 	return "gray"
 }
 
+// createMessage formats a message using the status, name and summary
 func createMessage(status, name, summary string) (plain, html string) {
-	emoji := emoji(status)
+	icon := icon(status)
 	color := color(status)
 
-	plain = fmt.Sprintf("%s %s %s: %s", emoji, strings.ToUpper(status), name, summary)
-	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s`, color, emoji, strings.ToUpper(status), name, summary)
+	plain = fmt.Sprintf("%s %s %s: %s", icon, strings.ToUpper(status), name, summary)
+	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s`, color, icon, strings.ToUpper(status), name, summary)
 
 	return
 }
 
+// formatAlerts formats alerts as plain text and HTML
 func formatAlerts(alerts []*Alert) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
