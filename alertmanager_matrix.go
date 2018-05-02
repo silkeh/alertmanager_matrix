@@ -56,7 +56,7 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 func main() {
 	var (
 		addr                             string // Listen address
-		homeserver, userID, token        string // Matrix connection settings
+		homeserver, userID, token, rooms string // Matrix connection settings
 		alertmanager                     string // Alertmanager settings
 		iconFile, colorFile, messageType string // Formatting settings
 	)
@@ -65,6 +65,7 @@ func main() {
 	flag.StringVar(&homeserver, "homeserver", "https://matrix.org", "Homeserver to connect to.")
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
+	flag.StringVar(&rooms, "rooms", "", "Comma separated list of rooms from which commands are allowed. All rooms are allowed by default.")
 	flag.StringVar(&alertmanager, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
@@ -86,7 +87,7 @@ func main() {
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
-	err := startMatrixClient(homeserver, userID, token, messageType)
+	err := startMatrixClient(homeserver, userID, token, messageType, rooms)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}

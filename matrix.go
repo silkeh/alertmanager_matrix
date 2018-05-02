@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	command = "!alert"
 	helpMessage = "Usage: !alert <subcommand> [options]\n\n" +
 		"Available subcommands are:\n\n" +
 		"- `help`: shows this message\n" +
@@ -28,6 +29,7 @@ const (
 
 var client *matrix.Client
 var am *alertmanager.Client
+var rooms map[string]struct{}
 
 // Start the Alertmanager client
 func startAlertmanagerClient(url string) (err error) {
@@ -36,7 +38,7 @@ func startAlertmanagerClient(url string) (err error) {
 }
 
 // Start the Matrix client
-func startMatrixClient(homeserver, userID, token, messageType string) (err error) {
+func startMatrixClient(homeserver, userID, token, messageType, rooms string) (err error) {
 	// Create a new client
 	client, err = matrix.NewClient(homeserver, userID, token, messageType)
 	if err != nil {
@@ -46,10 +48,45 @@ func startMatrixClient(homeserver, userID, token, messageType string) (err error
 	// Register sync/message handler
 	client.Syncer.OnEventType("m.room.message", messageHandler)
 
+	// Join rooms
+	if rooms != "" {
+		err = joinRooms(strings.Split(rooms, ","))
+		if err != nil {
+			return err
+		}
+	}
+
 	// Start syncing
 	go sync()
 
 	return
+}
+
+// joinRooms joins a list of room IDs or aliases
+func joinRooms(roomList []string) error {
+	rooms = make(map[string]struct{})
+	//joined := make(map[string]struct{})
+	//
+	//// Get already joined rooms
+	//jr, err := client.JoinedRooms()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//for _, r := range jr {
+	//	joined[r] = struct{}{}
+	//}
+
+	// Join all rooms
+	for _, r := range roomList {
+		j, err := client.JoinRoom(r, "", nil)
+		if err != nil {
+			return err
+		}
+		rooms[j.RoomID] = struct{}{}
+	}
+
+	return nil
 }
 
 // sync runs a never ending Matrix sync
@@ -82,10 +119,23 @@ func messageHandler(e *matrix.Event) {
 
 	// Get message text
 	text, ok := e.Body()
+
+	// Ignore message if:
+	// - no body
+	// - sent by the bot itself
+	// - does not start with command
 	if !ok ||
 		e.Sender == client.UserID ||
-		!strings.HasPrefix(text, "!alert") {
+		!strings.HasPrefix(text, command) {
 		return
+	}
+
+	// Ignore rooms that are not explicitly allowed when this is configured
+	if rooms != nil {
+		if _, ok := rooms[e.RoomID]; !ok {
+			log.Printf("Ignoring command from non configured room %s: %s", e.RoomID, text)
+			return
+		}
 	}
 
 	// Room to send response to
