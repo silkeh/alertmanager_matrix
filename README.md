@@ -35,7 +35,7 @@ The defaults are:
 ```json
 {
 	"alert":       "🔔️",
-	"information": "ℹ",
+	"information": "ℹ️",
 	"warning":     "⚠️",
 	"critical":    "🚨",
 	"ok":          "✅",

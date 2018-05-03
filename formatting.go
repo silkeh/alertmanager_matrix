@@ -11,7 +11,7 @@ import (
 // alertIcons represent the icons corresponding to the alert status
 var alertIcons = map[string]string{
 	"alert":       "🔔️",
-	"information": "ℹ",
+	"information": "ℹ️",
 	"warning":     "⚠️",
 	"critical":    "🚨",
 	"ok":          "✅",
