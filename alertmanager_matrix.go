@@ -86,6 +86,16 @@ func main() {
 		setMapFromJSONFile(&alertColors, colorFile)
 	}
 
+	// Check if user is set
+	if userID == "" {
+		log.Fatal("Error: no user ID")
+	}
+
+	// Check if token is set
+	if userID == "" {
+		log.Fatal("Error: no token")
+	}
+
 	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
 	err := startMatrixClient(homeserver, userID, token, messageType, rooms)
 	if err != nil {
