@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	command = "!alert"
+	command     = "!alert"
 	helpMessage = "Usage: !alert <subcommand> [options]\n\n" +
 		"Available subcommands are:\n\n" +
 		"- `help`: shows this message\n" +
@@ -65,17 +65,6 @@ func startMatrixClient(homeserver, userID, token, messageType, rooms string) (er
 // joinRooms joins a list of room IDs or aliases
 func joinRooms(roomList []string) error {
 	rooms = make(map[string]struct{})
-	//joined := make(map[string]struct{})
-	//
-	//// Get already joined rooms
-	//jr, err := client.JoinedRooms()
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//for _, r := range jr {
-	//	joined[r] = struct{}{}
-	//}
 
 	// Join all rooms
 	for _, r := range roomList {
