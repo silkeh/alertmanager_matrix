@@ -62,7 +62,7 @@ func main() {
 	)
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
-	flag.StringVar(&homeserver, "homeserver", "https://matrix.org", "Homeserver to connect to.")
+	flag.StringVar(&homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
 	flag.StringVar(&rooms, "rooms", "", "Comma separated list of rooms from which commands are allowed. All rooms are allowed by default.")

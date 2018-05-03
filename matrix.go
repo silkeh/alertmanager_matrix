@@ -96,6 +96,7 @@ func sync() {
 		if err != nil {
 			log.Printf("Sync error: %s", err)
 		}
+		time.Sleep(1 * time.Second)
 	}
 }
 
