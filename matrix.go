@@ -170,8 +170,8 @@ func messageHandler(e *matrix.Event) {
 }
 
 // Alerts returns all or non-silenced alerts
-func Alerts(silenced bool) (string, string) {
-	alerts, err := am.Alert.List(context.TODO(), "", silenced, false)
+func Alerts(silenced bool, labels bool) (string, string) {
+	alerts, err := GetAlerts(silenced)
 	if err != nil {
 		return err.Error(), ""
 	}
@@ -179,16 +179,7 @@ func Alerts(silenced bool) (string, string) {
 		return "No alerts", ""
 	}
 
-	// Map alerts to compatible type
-	as := make([]*Alert, len(alerts))
-	for i, a := range alerts {
-		as[i] = &Alert{
-			Alert:  a.Alert,
-			Status: string(a.Status.State),
-		}
-	}
-
-	return formatAlerts(as)
+	return formatAlerts(alerts, labels)
 }
 
 // Silences returns a Markdown formatted message containing silences with the specified state
@@ -227,15 +218,34 @@ func NewSilence(author string, args []string) string {
 		Comment:   "Created from Matrix",
 	}
 
-	for i, m := range matchers {
-		ms := regexp.MustCompile(`(.*)=(~?)"(.*)"`).FindStringSubmatch(m)
-		if ms == nil {
-			return "Invalid matcher: " + m
+	// Check if an ID is given instead of matchers
+	if len(matchers) == 1 && !strings.ContainsRune(matchers[0], '=') {
+		alert, err := GetAlert(matchers[0])
+		if err != nil {
+			return err.Error()
 		}
-		silence.Matchers[i] = &types.Matcher{
-			Name:    ms[1],
-			Value:   ms[3],
-			IsRegex: ms[2] == "~",
+		if alert == nil {
+			return fmt.Sprintf("No alert with fingerprint %s", matchers[0])
+		}
+
+		silence.Matchers = make(types.Matchers, 0, len(alert.Labels))
+		for name, value := range alert.Labels {
+			silence.Matchers = append(silence.Matchers, &types.Matcher{
+				Name:  string(name),
+				Value: string(value),
+			})
+		}
+	} else {
+		for i, m := range matchers {
+			ms := regexp.MustCompile(`(.*)=(~?)"(.*)"`).FindStringSubmatch(m)
+			if ms == nil {
+				return "Invalid matcher: " + m
+			}
+			silence.Matchers[i] = &types.Matcher{
+				Name:    ms[1],
+				Value:   ms[3],
+				IsRegex: ms[2] == "~",
+			}
 		}
 	}
 
