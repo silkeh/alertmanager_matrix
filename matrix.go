@@ -20,6 +20,7 @@ const (
 		"- `help`: shows this message\n" +
 		"- `list`: shows active alerts\n" +
 		"- `list all`: shows active and silenced alerts\n" +
+		"- `list labels`: shows labels of active alerts\n" +
 		"- `silence`: shows active silences\n" +
 		"- `silence pending`: shows pending silences\n" +
 		"- `silence expired`: shows expired silences\n" +
@@ -137,9 +138,11 @@ func messageHandler(e *matrix.Event) {
 	// Execute the action that matches the short form of the command
 	switch shortCommand(cmd[1:], 2) {
 	case "l":
-		plain, html = Alerts(false)
+		plain, html = Alerts(false, false)
 	case "la":
-		plain, html = Alerts(true)
+		plain, html = Alerts(true, false)
+	case "ll":
+		plain, html = Alerts(true, true)
 	case "s":
 		plain = Silences("active")
 	case "sp":

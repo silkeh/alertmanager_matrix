@@ -47,18 +47,19 @@ func color(t string) string {
 }
 
 // createMessage formats a message using the status, name and summary
-func createMessage(status, name, summary string) (plain, html string) {
+func createMessage(status, name, summary, id string) (plain, html string) {
 	icon := icon(status)
 	color := color(status)
 
-	plain = fmt.Sprintf("%s %s %s: %s", icon, strings.ToUpper(status), name, summary)
-	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s`, color, icon, strings.ToUpper(status), name, summary)
+	plain = fmt.Sprintf("%s %s %s: %s (%s)", icon, strings.ToUpper(status), name, summary, id)
+	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s (%s)`,
+		color, icon, strings.ToUpper(status), name, summary, id)
 
 	return
 }
 
 // formatAlerts formats alerts as plain text and HTML
-func formatAlerts(alerts []*Alert) (string, string) {
+func formatAlerts(alerts []*Alert, labels bool) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
 
@@ -82,7 +83,20 @@ func formatAlerts(alerts []*Alert) (string, string) {
 			alertName = string(v)
 		}
 
-		plain[i], html[i] = createMessage(status, alertName, summary)
+		// Format main message
+		plain[i], html[i] = createMessage(status, alertName, summary, a.Fingerprint)
+
+		// Add labels
+		if labels {
+			pls := make([]string, 0, len(a.Labels))
+			hls := make([]string, 0, len(a.Labels))
+			for n, v := range a.Labels {
+				pls = append(pls, fmt.Sprintf(`%s="%s"`, n, v))
+				hls = append(hls, fmt.Sprintf("<code>%s=\"%s\"</code>", n, v))
+			}
+			plain[i] += ", labels:" + strings.Join(pls, " ")
+			html[i] += "<br/><b>Labels:</b> " + strings.Join(hls, " ")
+		}
 	}
 
 	plainBody := strings.Join(plain, "\n")

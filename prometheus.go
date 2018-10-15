@@ -6,7 +6,7 @@ import (
 
 // Alert represents an Alert received from Alertmanager via webhook
 type Alert struct {
-	alertmanager.Alert
+	*alertmanager.ExtendedAlert
 	Status string
 }
 

@@ -27,7 +27,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create readable messages for Matrix
-	plain, html := formatAlerts(data.Alerts)
+	plain, html := formatAlerts(data.Alerts, false)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
 	if _, err := room.SendHTML(plain, html); err != nil {
