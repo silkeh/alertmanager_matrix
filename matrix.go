@@ -201,7 +201,7 @@ func Silences(state string) string {
 // NewSilence creates a new silence and returns the ID
 func NewSilence(author string, args []string) string {
 	if len(args) < 2 {
-		return "Insufficent arguments"
+		return "Insufficient arguments"
 	}
 
 	matchers := args[1:]
