@@ -51,8 +51,12 @@ func createMessage(status, name, summary, id string) (plain, html string) {
 	icon := icon(status)
 	color := color(status)
 
-	plain = fmt.Sprintf("%s %s %s: %s (%s)", icon, strings.ToUpper(status), name, summary, id)
-	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s (%s)`,
+	if id != "" {
+		id = fmt.Sprintf(" (%s)", id)
+	}
+
+	plain = fmt.Sprintf("%s %s %s: %s%s", icon, strings.ToUpper(status), name, summary, id)
+	html = fmt.Sprintf(`<font color="%s">%s <b>%s</b> %s:</font> %s%s`,
 		color, icon, strings.ToUpper(status), name, summary, id)
 
 	return
