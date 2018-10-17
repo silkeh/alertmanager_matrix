@@ -8,7 +8,7 @@ import (
 // Alert represents an Alert received from Alertmanager via webhook
 type Alert struct {
 	*alertmanager.ExtendedAlert
-	Status string
+	Status string `json:"status"`
 }
 
 // Message represents a message received from Alertmanager via webhook
