@@ -14,7 +14,7 @@ var alertIcons = map[string]string{
 	"information": "ℹ️",
 	"warning":     "⚠️",
 	"critical":    "🚨",
-	"ok":          "✅",
+	"resolved":    "✅",
 	"silenced":    "🔕",
 }
 
@@ -24,7 +24,7 @@ var alertColors = map[string]string{
 	"information": "blue",
 	"warning":     "orange",
 	"critical":    "red",
-	"ok":          "green",
+	"resolved":    "green",
 	"silenced":    "gray",
 }
 
@@ -70,7 +70,7 @@ func formatAlerts(alerts []*Alert, labels bool) (string, string) {
 	for i, a := range alerts {
 		status := "alert"
 		if a.Status == "resolved" {
-			status = "ok"
+			status = "resolved"
 		} else if a.Status == "suppressed" {
 			status = "silenced"
 		} else if sev, ok := a.Labels["severity"]; ok {
