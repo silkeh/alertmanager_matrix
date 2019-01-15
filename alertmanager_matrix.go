@@ -13,7 +13,7 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	room := client.NewRoom(mux.Vars(r)["room"])
+	room := client.ma.NewRoom(mux.Vars(r)["room"])
 	if room.ID[0] != '!' {
 		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
@@ -55,11 +55,14 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 	}
 }
 
+// Main client
+var client *Client
+
 func main() {
 	var (
 		addr                             string // Listen address
 		homeserver, userID, token, rooms string // Matrix connection settings
-		alertmanager                     string // Alertmanager settings
+		alertmanagerURL                  string // Alertmanager settings
 		iconFile, colorFile, messageType string // Formatting settings
 	)
 
@@ -68,7 +71,7 @@ func main() {
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
 	flag.StringVar(&rooms, "rooms", "", "Comma separated list of rooms from which commands are allowed. All rooms are allowed by default.")
-	flag.StringVar(&alertmanager, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
+	flag.StringVar(&alertmanagerURL, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
 	flag.StringVar(&messageType, "message-type", "m.notice", "Type of message the bot uses.")
@@ -98,18 +101,19 @@ func main() {
 		log.Fatal("Error: no token")
 	}
 
-	log.Printf("Connecting to Matrix homeserver at %s as %s", homeserver, userID)
-	err := startMatrixClient(homeserver, userID, token, messageType, rooms)
+	// Create/connect client
+	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s", homeserver, userID, alertmanagerURL)
+	client, err := NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
 
-	log.Printf("Connecting to Alertmanager at %s", alertmanager)
-	err = startAlertmanagerClient(alertmanager)
-	if err != nil {
-		log.Fatalf("Error connecting to AlertManager: %s", err)
-	}
+	// Start syncing
+	go func() {
+		log.Fatal(client.Run())
+	}()
 
+	// Create/start HTTP server
 	r := mux.NewRouter()
 	r.HandleFunc("/{room}", handler).Methods("POST")
 	log.Print("Listening on ", addr)

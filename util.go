@@ -31,3 +31,16 @@ func parseDuration(s string) (time.Duration, error) {
 		return time.ParseDuration(s)
 	}
 }
+
+// shortCommand returns the n letter abbreviation of a command.
+func shortCommand(cmd []string, n int) (str string) {
+	for _, c := range cmd {
+		if len(c) > 0 {
+			str += string(c[0])
+		}
+		if len(str) == n {
+			break
+		}
+	}
+	return
+}

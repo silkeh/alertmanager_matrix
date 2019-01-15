@@ -28,83 +28,84 @@ const (
 		"- `silence del <ids>`: create a new silence\n"
 )
 
-var client *matrix.Client
-var am *alertmanager.Client
-var rooms map[string]struct{}
-
-// Start the Alertmanager client
-func startAlertmanagerClient(url string) (err error) {
-	am, err = alertmanager.NewClient(url)
-	return
+// Client represents an Alertmanager/Matrix client
+type Client struct {
+	ma       *matrix.Client
+	am       *alertmanager.Client
+	roomList []string
+	rooms    map[string]struct{}
 }
 
-// Start the Matrix client
-func startMatrixClient(homeserver, userID, token, messageType, rooms string) (err error) {
-	// Create a new client
-	client, err = matrix.NewClient(homeserver, userID, token, messageType)
+// Create and start a new Alertmanager/Matrix client
+func NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL string) (client *Client, err error) {
+	client = new(Client)
+
+	// Create Alertmanager client
+	client.am, err = alertmanager.NewClient(alertmanagerURL)
+	if err != nil {
+		return
+	}
+
+	// Create Matrix client
+	client.ma, err = matrix.NewClient(homeserver, userID, token, messageType)
 	if err != nil {
 		return
 	}
 
 	// Register sync/message handler
-	client.Syncer.OnEventType("m.room.message", messageHandler)
+	client.ma.Syncer.OnEventType("m.room.message", client.messageHandler)
 
-	// Join rooms
+	// Create room list
 	if rooms != "" {
-		err = joinRooms(strings.Split(rooms, ","))
+		client.roomList = strings.Split(rooms, ",")
+	}
+
+	return
+}
+
+// Start the Matrix client
+func (c *Client) Run() error {
+	// Join rooms
+	if c.roomList != nil {
+		err := c.joinRooms(c.roomList)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Start syncing
-	go sync()
-
-	return
+	return c.sync()
 }
 
 // joinRooms joins a list of room IDs or aliases
-func joinRooms(roomList []string) error {
-	rooms = make(map[string]struct{})
+func (c *Client) joinRooms(roomList []string) error {
+	c.rooms = make(map[string]struct{})
 
 	// Join all rooms
 	for _, r := range roomList {
-		j, err := client.JoinRoom(r, "", nil)
+		j, err := c.ma.JoinRoom(r, "", nil)
 		if err != nil {
 			return err
 		}
-		rooms[j.RoomID] = struct{}{}
+		c.rooms[j.RoomID] = struct{}{}
 	}
 
 	return nil
 }
 
 // sync runs a never ending Matrix sync
-func sync() {
+func (c *Client) sync() error {
 	for {
-		err := client.Sync()
+		err := c.ma.Sync()
 		if err != nil {
-			log.Printf("Sync error: %s", err)
+			return err
 		}
 		time.Sleep(1 * time.Second)
 	}
 }
 
-// shortCommand returns the n letter abbreviation of a command.
-func shortCommand(cmd []string, n int) (str string) {
-	for _, c := range cmd {
-		if len(c) > 0 {
-			str += string(c[0])
-		}
-		if len(str) == n {
-			break
-		}
-	}
-	return
-}
-
 // messageHandler handles an incoming event
-func messageHandler(e *matrix.Event) {
+func (c *Client) messageHandler(e *matrix.Event) {
 	var plain, html string
 	var err error
 
@@ -116,21 +117,21 @@ func messageHandler(e *matrix.Event) {
 	// - sent by the bot itself
 	// - does not start with command
 	if !ok ||
-		e.Sender == client.UserID ||
+		e.Sender == c.ma.UserID ||
 		!strings.HasPrefix(text, command) {
 		return
 	}
 
 	// Ignore rooms that are not explicitly allowed when this is configured
-	if rooms != nil {
-		if _, ok := rooms[e.RoomID]; !ok {
+	if c.rooms != nil {
+		if _, ok := c.rooms[e.RoomID]; !ok {
 			log.Printf("Ignoring command from non configured room %s: %s", e.RoomID, text)
 			return
 		}
 	}
 
 	// Room to send response to
-	room := client.NewRoom(e.RoomID)
+	room := c.ma.NewRoom(e.RoomID)
 
 	// Get command
 	cmd := strings.Split(text, " ")
@@ -138,21 +139,21 @@ func messageHandler(e *matrix.Event) {
 	// Execute the action that matches the short form of the command
 	switch shortCommand(cmd[1:], 2) {
 	case "l":
-		plain, html = Alerts(false, false)
+		plain, html = c.Alerts(false, false)
 	case "la":
-		plain, html = Alerts(true, false)
+		plain, html = c.Alerts(true, false)
 	case "ll":
-		plain, html = Alerts(true, true)
+		plain, html = c.Alerts(true, true)
 	case "s":
-		plain = Silences("active")
+		plain = c.Silences("active")
 	case "sp":
-		plain = Silences("pending")
+		plain = c.Silences("pending")
 	case "se":
-		plain = Silences("expired")
+		plain = c.Silences("expired")
 	case "sa":
-		plain = NewSilence(e.Sender, cmd[3:])
+		plain = c.NewSilence(e.Sender, cmd[3:])
 	case "sd":
-		plain = DelSilence(cmd[3:])
+		plain = c.DelSilence(cmd[3:])
 	default:
 		plain = helpMessage
 	}
@@ -170,8 +171,8 @@ func messageHandler(e *matrix.Event) {
 }
 
 // Alerts returns all or non-silenced alerts
-func Alerts(silenced bool, labels bool) (string, string) {
-	alerts, err := am.GetAlerts(silenced)
+func (c *Client) Alerts(silenced bool, labels bool) (string, string) {
+	alerts, err := c.am.GetAlerts(silenced)
 	if err != nil {
 		return err.Error(), ""
 	}
@@ -183,8 +184,8 @@ func Alerts(silenced bool, labels bool) (string, string) {
 }
 
 // Silences returns a Markdown formatted message containing silences with the specified state
-func Silences(state string) string {
-	silences, err := am.Silence.List(context.TODO(), "")
+func (c *Client) Silences(state string) string {
+	silences, err := c.am.Silence.List(context.TODO(), "")
 	if err != nil {
 		return err.Error()
 	}
@@ -199,7 +200,7 @@ func Silences(state string) string {
 }
 
 // NewSilence creates a new silence and returns the ID
-func NewSilence(author string, args []string) string {
+func (c *Client) NewSilence(author string, args []string) string {
 	if len(args) < 2 {
 		return "Insufficient arguments"
 	}
@@ -220,7 +221,7 @@ func NewSilence(author string, args []string) string {
 
 	// Check if an ID is given instead of matchers
 	if len(matchers) == 1 && !strings.ContainsRune(matchers[0], '=') {
-		alert, err := am.GetAlert(matchers[0])
+		alert, err := c.am.GetAlert(matchers[0])
 		if err != nil {
 			return err.Error()
 		}
@@ -249,7 +250,7 @@ func NewSilence(author string, args []string) string {
 		}
 	}
 
-	id, err := am.Silence.Set(context.TODO(), silence)
+	id, err := c.am.Silence.Set(context.TODO(), silence)
 	if err != nil {
 		return err.Error()
 	}
@@ -258,7 +259,7 @@ func NewSilence(author string, args []string) string {
 }
 
 // DelSilence deletes silences
-func DelSilence(ids []string) string {
+func (c *Client) DelSilence(ids []string) string {
 	if len(ids) == 0 {
 		return "No silence IDs provided"
 	}
@@ -266,7 +267,7 @@ func DelSilence(ids []string) string {
 	var errors []string
 
 	for _, id := range ids {
-		err := am.Silence.Expire(context.TODO(), id)
+		err := c.am.Silence.Expire(context.TODO(), id)
 		if err != nil {
 			errors = append(errors,
 				fmt.Sprintf("Error deleting %s: %s", id, err))
