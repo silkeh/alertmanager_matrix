@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
 	"github.com/prometheus/alertmanager/types"
 )
 
@@ -63,7 +64,7 @@ func createMessage(status, name, summary, id string) (plain, html string) {
 }
 
 // formatAlerts formats alerts as plain text and HTML
-func formatAlerts(alerts []*Alert, labels bool) (string, string) {
+func formatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
 

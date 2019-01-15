@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
+
+	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
+	"github.com/gorilla/mux"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +21,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse the message
-	data := new(Message)
+	data := new(alertmanager.Message)
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
 		log.Printf("Error parsing message: %s", err)
 		w.WriteHeader(http.StatusBadRequest)

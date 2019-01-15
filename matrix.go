@@ -171,7 +171,7 @@ func messageHandler(e *matrix.Event) {
 
 // Alerts returns all or non-silenced alerts
 func Alerts(silenced bool, labels bool) (string, string) {
-	alerts, err := GetAlerts(silenced)
+	alerts, err := am.GetAlerts(silenced)
 	if err != nil {
 		return err.Error(), ""
 	}
@@ -220,7 +220,7 @@ func NewSilence(author string, args []string) string {
 
 	// Check if an ID is given instead of matchers
 	if len(matchers) == 1 && !strings.ContainsRune(matchers[0], '=') {
-		alert, err := GetAlert(matchers[0])
+		alert, err := am.GetAlert(matchers[0])
 		if err != nil {
 			return err.Error()
 		}
