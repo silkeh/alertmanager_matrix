@@ -1,4 +1,4 @@
-package main
+package bot
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 	"github.com/prometheus/alertmanager/types"
 )
 
-// alertIcons represent the icons corresponding to the alert status
-var alertIcons = map[string]string{
+// AlertIcons represent the icons corresponding to the alert status
+var AlertIcons = map[string]string{
 	"alert":       "🔔️",
 	"information": "ℹ️",
 	"warning":     "⚠️",
@@ -19,8 +19,8 @@ var alertIcons = map[string]string{
 	"silenced":    "🔕",
 }
 
-// alertColors represent the colors corresponding to the alert status
-var alertColors = map[string]string{
+// AlertColors represent the colors corresponding to the alert status
+var AlertColors = map[string]string{
 	"alert":       "black",
 	"information": "blue",
 	"warning":     "orange",
@@ -31,7 +31,7 @@ var alertColors = map[string]string{
 
 // icon returns the icon for a string
 func icon(t string) string {
-	if e, ok := alertIcons[t]; ok {
+	if e, ok := AlertIcons[t]; ok {
 		return e
 	}
 	log.Printf("Unknown status: %s", t)
@@ -40,15 +40,15 @@ func icon(t string) string {
 
 // color returns the color for string
 func color(t string) string {
-	if c, ok := alertColors[t]; ok {
+	if c, ok := AlertColors[t]; ok {
 		return c
 	}
 	log.Printf("Unknown status: %s", t)
 	return "gray"
 }
 
-// createMessage formats a message using the status, name and summary
-func createMessage(status, name, summary, id string) (plain, html string) {
+// CreateMessage formats a message using the status, name and summary
+func CreateMessage(status, name, summary, id string) (plain, html string) {
 	icon := icon(status)
 	color := color(status)
 
@@ -63,8 +63,8 @@ func createMessage(status, name, summary, id string) (plain, html string) {
 	return
 }
 
-// formatAlerts formats alerts as plain text and HTML
-func formatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
+// FormatAlerts formats alerts as plain text and HTML
+func FormatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
 
@@ -89,7 +89,7 @@ func formatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 		}
 
 		// Format main message
-		plain[i], html[i] = createMessage(status, alertName, summary, a.Fingerprint)
+		plain[i], html[i] = CreateMessage(status, alertName, summary, a.Fingerprint)
 
 		// Add labels
 		if labels {
@@ -110,8 +110,8 @@ func formatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 	return plainBody, htmlBody
 }
 
-// formatSilences formats silences as Markdown.
-func formatSilences(silences []*types.Silence, state string) string {
+// FormatSilences formats silences as Markdown.
+func FormatSilences(silences []*types.Silence, state string) string {
 	md := ""
 
 	for _, s := range silences {

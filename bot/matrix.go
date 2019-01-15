@@ -1,4 +1,4 @@
-package main
+package bot
 
 import (
 	"context"
@@ -30,30 +30,30 @@ const (
 
 // Client represents an Alertmanager/Matrix client
 type Client struct {
-	ma       *matrix.Client
-	am       *alertmanager.Client
-	roomList []string
-	rooms    map[string]struct{}
+	Matrix       *matrix.Client
+	Alertmanager *alertmanager.Client
+	roomList     []string
+	rooms        map[string]struct{}
 }
 
-// Create and start a new Alertmanager/Matrix client
+// NewClient creates and starts a new Alertmanager/Matrix client
 func NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL string) (client *Client, err error) {
 	client = new(Client)
 
 	// Create Alertmanager client
-	client.am, err = alertmanager.NewClient(alertmanagerURL)
+	client.Alertmanager, err = alertmanager.NewClient(alertmanagerURL)
 	if err != nil {
 		return
 	}
 
 	// Create Matrix client
-	client.ma, err = matrix.NewClient(homeserver, userID, token, messageType)
+	client.Matrix, err = matrix.NewClient(homeserver, userID, token, messageType)
 	if err != nil {
 		return
 	}
 
 	// Register sync/message handler
-	client.ma.Syncer.OnEventType("m.room.message", client.messageHandler)
+	client.Matrix.Syncer.OnEventType("m.room.message", client.messageHandler)
 
 	// Create room list
 	if rooms != "" {
@@ -63,7 +63,7 @@ func NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL st
 	return
 }
 
-// Start the Matrix client
+// Run the client in a blocking thread
 func (c *Client) Run() error {
 	// Join rooms
 	if c.roomList != nil {
@@ -83,7 +83,7 @@ func (c *Client) joinRooms(roomList []string) error {
 
 	// Join all rooms
 	for _, r := range roomList {
-		j, err := c.ma.JoinRoom(r, "", nil)
+		j, err := c.Matrix.JoinRoom(r, "", nil)
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (c *Client) joinRooms(roomList []string) error {
 // sync runs a never ending Matrix sync
 func (c *Client) sync() error {
 	for {
-		err := c.ma.Sync()
+		err := c.Matrix.Sync()
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func (c *Client) messageHandler(e *matrix.Event) {
 	// - sent by the bot itself
 	// - does not start with command
 	if !ok ||
-		e.Sender == c.ma.UserID ||
+		e.Sender == c.Matrix.UserID ||
 		!strings.HasPrefix(text, command) {
 		return
 	}
@@ -131,7 +131,7 @@ func (c *Client) messageHandler(e *matrix.Event) {
 	}
 
 	// Room to send response to
-	room := c.ma.NewRoom(e.RoomID)
+	room := c.Matrix.NewRoom(e.RoomID)
 
 	// Get command
 	cmd := strings.Split(text, " ")
@@ -172,7 +172,7 @@ func (c *Client) messageHandler(e *matrix.Event) {
 
 // Alerts returns all or non-silenced alerts
 func (c *Client) Alerts(silenced bool, labels bool) (string, string) {
-	alerts, err := c.am.GetAlerts(silenced)
+	alerts, err := c.Alertmanager.GetAlerts(silenced)
 	if err != nil {
 		return err.Error(), ""
 	}
@@ -180,17 +180,17 @@ func (c *Client) Alerts(silenced bool, labels bool) (string, string) {
 		return "No alerts", ""
 	}
 
-	return formatAlerts(alerts, labels)
+	return FormatAlerts(alerts, labels)
 }
 
 // Silences returns a Markdown formatted message containing silences with the specified state
 func (c *Client) Silences(state string) string {
-	silences, err := c.am.Silence.List(context.TODO(), "")
+	silences, err := c.Alertmanager.Silence.List(context.TODO(), "")
 	if err != nil {
 		return err.Error()
 	}
 
-	md := formatSilences(silences, state)
+	md := FormatSilences(silences, state)
 
 	if md == "" {
 		return fmt.Sprintf("No %s silences", state)
@@ -221,7 +221,7 @@ func (c *Client) NewSilence(author string, args []string) string {
 
 	// Check if an ID is given instead of matchers
 	if len(matchers) == 1 && !strings.ContainsRune(matchers[0], '=') {
-		alert, err := c.am.GetAlert(matchers[0])
+		alert, err := c.Alertmanager.GetAlert(matchers[0])
 		if err != nil {
 			return err.Error()
 		}
@@ -250,7 +250,7 @@ func (c *Client) NewSilence(author string, args []string) string {
 		}
 	}
 
-	id, err := c.am.Silence.Set(context.TODO(), silence)
+	id, err := c.Alertmanager.Silence.Set(context.TODO(), silence)
 	if err != nil {
 		return err.Error()
 	}
@@ -267,7 +267,7 @@ func (c *Client) DelSilence(ids []string) string {
 	var errors []string
 
 	for _, id := range ids {
-		err := c.am.Silence.Expire(context.TODO(), id)
+		err := c.Alertmanager.Silence.Expire(context.TODO(), id)
 		if err != nil {
 			errors = append(errors,
 				fmt.Sprintf("Error deleting %s: %s", id, err))

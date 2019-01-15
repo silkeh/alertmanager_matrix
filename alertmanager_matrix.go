@@ -8,12 +8,13 @@ import (
 	"os"
 
 	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
+	"git.slxh.eu/prometheus/alertmanager_matrix/bot"
 	"github.com/gorilla/mux"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	room := client.ma.NewRoom(mux.Vars(r)["room"])
+	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
 	if room.ID[0] != '!' {
 		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
@@ -29,7 +30,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create readable messages for Matrix
-	plain, html := formatAlerts(data.Alerts, false)
+	plain, html := bot.FormatAlerts(data.Alerts, false)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
 	if _, err := room.SendHTML(plain, html); err != nil {
@@ -56,7 +57,7 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 }
 
 // Main client
-var client *Client
+var client *bot.Client
 
 func main() {
 	var (
@@ -85,10 +86,10 @@ func main() {
 
 	// Load mappings from files
 	if iconFile != "" {
-		setMapFromJSONFile(&alertIcons, iconFile)
+		setMapFromJSONFile(&bot.AlertIcons, iconFile)
 	}
 	if colorFile != "" {
-		setMapFromJSONFile(&alertColors, colorFile)
+		setMapFromJSONFile(&bot.AlertColors, colorFile)
 	}
 
 	// Check if user is set
@@ -103,7 +104,7 @@ func main() {
 
 	// Create/connect client
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s", homeserver, userID, alertmanagerURL)
-	client, err := NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
+	client, err := bot.NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
