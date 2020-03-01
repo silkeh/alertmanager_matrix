@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
-	"git.slxh.eu/prometheus/alertmanager_matrix/bot"
 	"github.com/gorilla/mux"
+	"github.com/silkeh/alertmanager_matrix/alertmanager"
+	"github.com/silkeh/alertmanager_matrix/bot"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {

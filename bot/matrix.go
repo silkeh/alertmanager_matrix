@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
-	"git.slxh.eu/prometheus/alertmanager_matrix/matrix"
 	"github.com/matrix-org/gomatrix"
 	"github.com/prometheus/alertmanager/types"
+	"github.com/silkeh/alertmanager_matrix/alertmanager"
+	"github.com/silkeh/alertmanager_matrix/matrix"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
 	"github.com/prometheus/alertmanager/types"
+	"github.com/silkeh/alertmanager_matrix/alertmanager"
 )
 
 // AlertIcons represent the icons corresponding to the alert status
