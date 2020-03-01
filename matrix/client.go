@@ -27,9 +27,6 @@ type Message struct {
 	Format        string `json:"format,omitempty"`
 }
 
-// Event represents a Matrix Event, see gomatrix.Event
-type Event matrix.Event
-
 // NewClient returns a configured Matrix Client
 func NewClient(homeserverURL, userID, accessToken, messageType string) (c *Client, err error) {
 	c = &Client{messageType: messageType}

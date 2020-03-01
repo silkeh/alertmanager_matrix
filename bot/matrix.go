@@ -10,6 +10,7 @@ import (
 
 	"git.slxh.eu/prometheus/alertmanager_matrix/alertmanager"
 	"git.slxh.eu/prometheus/alertmanager_matrix/matrix"
+	"github.com/matrix-org/gomatrix"
 	"github.com/prometheus/alertmanager/types"
 )
 
@@ -105,7 +106,7 @@ func (c *Client) sync() error {
 }
 
 // messageHandler handles an incoming event
-func (c *Client) messageHandler(e *matrix.Event) {
+func (c *Client) messageHandler(e *gomatrix.Event) {
 	var plain, html string
 	var err error
 
