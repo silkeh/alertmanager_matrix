@@ -124,20 +124,33 @@ func (c *Client) messageHandler(e *gomatrix.Event) {
 	}
 
 	// Ignore rooms that are not explicitly allowed when this is configured
-	if c.rooms != nil {
-		if _, ok := c.rooms[e.RoomID]; !ok {
-			log.Printf("Ignoring command from non configured room %s: %s", e.RoomID, text)
-			return
-		}
+	if !c.checkRoom(e.RoomID) {
+		log.Printf("Ignoring command from non configured room %s: %s", e.RoomID, text)
+		return
 	}
 
-	// Room to send response to
-	room := c.Matrix.NewRoom(e.RoomID)
+	// Execute the given command
+	c.executeCommand(e, strings.Split(text, " ")...)
 
-	// Get command
-	cmd := strings.Split(text, " ")
+	err = c.sendMessage(e.RoomID, plain, html)
+	if err != nil {
+		log.Print("Error: ", err)
+	}
+}
 
-	// Execute the action that matches the short form of the command
+// checkRoom returns true if the room is allowed,
+// and false otherwise.
+func (c *Client) checkRoom(roomID string) bool {
+	if c.rooms != nil {
+		if _, ok := c.rooms[roomID]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// executeCommand executes a command for an event
+func (c *Client) executeCommand(e *gomatrix.Event, cmd ...string) (plain, html string) {
 	switch shortCommand(cmd[1:], 2) {
 	case "l":
 		plain, html = c.Alerts(false, false)
@@ -158,6 +171,13 @@ func (c *Client) messageHandler(e *gomatrix.Event) {
 	default:
 		plain = helpMessage
 	}
+	return
+}
+
+// sendMessage sends a message with the given body
+func (c *Client) sendMessage(roomID, plain, html string) (err error) {
+	// Room to send response to
+	room := c.Matrix.NewRoom(roomID)
 
 	// Send a Markdown message if no HTML is provided
 	if html == "" {
@@ -166,9 +186,7 @@ func (c *Client) messageHandler(e *gomatrix.Event) {
 		_, err = room.SendHTML(plain, html)
 	}
 
-	if err != nil {
-		log.Print("Error: ", err)
-	}
+	return err
 }
 
 // Alerts returns all or non-silenced alerts
