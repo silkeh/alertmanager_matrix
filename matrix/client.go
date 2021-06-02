@@ -2,7 +2,7 @@ package matrix
 
 import (
 	matrix "github.com/matrix-org/gomatrix"
-	"gopkg.in/russross/blackfriday.v2"
+	"github.com/russross/blackfriday/v2"
 )
 
 // Client represents a Matrix Client
