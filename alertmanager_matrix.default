@@ -1,0 +1,5 @@
+ADDR=":4051"
+HOMESERVER=http://localhost:8008
+USER_ID=@bot:example.com
+TOKEN="<token>"
+ALERTMANAGER:http://localhost:9093
