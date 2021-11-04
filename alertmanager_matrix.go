@@ -96,6 +96,8 @@ func main() {
 	setStringFromEnv(&homeserver, "HOMESERVER")
 	setStringFromEnv(&userID, "USER_ID")
 	setStringFromEnv(&token, "TOKEN")
+	setStringFromEnv(&alertmanagerURL, "ALERTMANAGER")
+	setStringFromEnv(&rooms, "ROOMS")
 
 	// Load mappings from files
 	if iconFile != "" {
