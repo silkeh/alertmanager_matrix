@@ -123,7 +123,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
-
+	log.Printf("Connected to Matrix homeserver at %s as %s, and to Alertmanager at %s -- Client instance %+v", homeserver, userID, alertmanagerURL, client)
 	// Start syncing
 	go func() {
 		log.Fatal(client.Run())
