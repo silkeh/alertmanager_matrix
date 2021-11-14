@@ -8,21 +8,12 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+
 	"github.com/silkeh/alertmanager_matrix/alertmanager"
 	"github.com/silkeh/alertmanager_matrix/bot"
 )
 
-type clientHandler struct {
-	client *bot.Client
-}
-
-func (c *clientHandler) handler(w http.ResponseWriter, r *http.Request) {
-	client := c.client
-	if client == nil {
-		log.Print("Not connected to Matrix")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) {
 	// Get room from request
 	roomID := mux.Vars(r)["room"]
 	if roomID == "" {
@@ -74,6 +65,7 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 
 func main() {
 	var (
+		err                              error
 		addr                             string // Listen address
 		homeserver, userID, token, rooms string // Matrix connection settings
 		alertmanagerURL                  string // Alertmanager settings
@@ -117,21 +109,26 @@ func main() {
 		log.Fatal("Error: no token")
 	}
 
-	// Create/connect client
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s", homeserver, userID, alertmanagerURL)
+
 	client, err := bot.NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
+
 	// Start syncing
 	go func() {
 		log.Fatal(client.Run())
 	}()
 
+	// Create the HTTP handler
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		requestHandler(client, w, r)
+	}
+
 	// Create/start HTTP server
 	r := mux.NewRouter()
-	bc := &clientHandler{client}
-	r.HandleFunc("/{room}", bc.handler).Methods("POST")
+	r.HandleFunc("/{room}", handler).Methods("POST")
 	log.Print("Listening on ", addr)
 	log.Fatal(http.ListenAndServe(addr, r))
 }

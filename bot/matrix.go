@@ -3,38 +3,20 @@ package bot
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/matrix-org/gomatrix"
 	"github.com/prometheus/alertmanager/types"
-	"github.com/silkeh/alertmanager_matrix/alertmanager"
-	"github.com/silkeh/alertmanager_matrix/matrix"
-)
+	"gitlab.com/silkeh/matrix-bot"
 
-const (
-	command     = "!alert"
-	helpMessage = "Usage: !alert <subcommand> [options]\n\n" +
-		"Available subcommands are:\n\n" +
-		"- `help`: shows this message\n" +
-		"- `list`: shows active alerts\n" +
-		"- `list all`: shows active and silenced alerts\n" +
-		"- `list labels`: shows labels of active alerts\n" +
-		"- `silence`: shows active silences\n" +
-		"- `silence pending`: shows pending silences\n" +
-		"- `silence expired`: shows expired silences\n" +
-		"- `silence add <duration> <matchers>`: create a new silence\n" +
-		"- `silence del <ids>`: create a new silence\n"
+	"github.com/silkeh/alertmanager_matrix/alertmanager"
 )
 
 // Client represents an Alertmanager/Matrix client
 type Client struct {
-	Matrix       *matrix.Client
+	Matrix       *bot.Client
 	Alertmanager *alertmanager.Client
-	roomList     []string
-	rooms        map[string]struct{}
 }
 
 // NewClient creates and starts a new Alertmanager/Matrix client
@@ -47,159 +29,145 @@ func NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL st
 		return
 	}
 
+	// Matrix bot config
+	matrixConfig := &bot.ClientConfig{
+		MessageType:      messageType,
+		CommandPrefixes:  []string{"!alert", "!alertmanager"},
+		IgnoreHighlights: false,
+	}
+
 	// Create Matrix client
-	client.Matrix, err = matrix.NewClient(homeserver, userID, token, messageType)
+	client.Matrix, err = bot.NewClient(homeserver, userID, token, matrixConfig)
 	if err != nil {
 		return
 	}
 
-	// Register sync/message handler
-	client.Matrix.Syncer.OnEventType("m.room.message", client.messageHandler)
-
 	// Create room list
 	if rooms != "" {
-		client.roomList = strings.Split(rooms, ",")
+		matrixConfig.AllowedRooms = strings.Split(rooms, ",")
 	}
+
+	// Register commands
+	client.Matrix.SetCommand("", client.listOnlyCommand())
+	client.Matrix.SetCommand("list", client.listCommand())
+	client.Matrix.SetCommand("silence", client.silenceCommand())
 
 	return
 }
 
-// Run the client in a blocking thread
-func (c *Client) Run() error {
-	// Join rooms
-	if c.roomList != nil {
-		err := c.joinRooms(c.roomList)
-		if err != nil {
-			return err
-		}
+// mainCommand returns the `alert` bot command.
+func (c *Client) listOnlyCommand() *bot.Command {
+	return &bot.Command{
+		Summary: "Show active alerts.",
+		MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+			return c.Alerts(false, false)
+		},
+	}
+}
+
+// listCommand returns the `list` bot command.
+func (c *Client) listCommand() *bot.Command {
+	cmd := c.listOnlyCommand()
+	cmd.Subcommands = map[string]*bot.Command{
+		"all": {
+			Summary: "Show active and silenced alerts.",
+			MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				return c.Alerts(true, false)
+			},
+			Subcommands: map[string]*bot.Command{
+				"labels": {
+					Summary: "Shows label of active and silenced alerts.",
+					MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+						return c.Alerts(true, true)
+					},
+				},
+			},
+		},
+		"labels": {
+			Summary: "Show labels of active alerts.",
+			MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				return c.Alerts(false, true)
+			},
+		},
 	}
 
-	// Start syncing
-	return c.sync()
+	return cmd
+}
+
+// silenceCommand returns the `silence` command.
+func (c *Client) silenceCommand() *bot.Command {
+	return &bot.Command{
+		Summary: "Show active silences.",
+		MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+			return bot.NewMarkdownMessage(c.Silences("active"))
+		},
+		Subcommands: map[string]*bot.Command{
+			"pending": {
+				Summary: "Show pending silences.",
+				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+					return bot.NewMarkdownMessage(c.Silences("pending"))
+				},
+			},
+			"expired": {
+				Summary: "Shows expired silences.",
+				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+					return bot.NewMarkdownMessage(c.Silences("expired"))
+				},
+			},
+			"add": {
+				Summary: "Create a silence.",
+				Description: "Create a silence	using a `duration` and `matcher` or `fingerprint`.\n\n" +
+					"A matcher matches job labels, for example: \n" +
+					"```\nsilence add 1h job=\"test\" target=~\"test.*\"\n```\n" +
+					"Alternative, an alert fingerprint can be given to match all labels of that alert, for example:\n" +
+					"```\nsilence add 1h 04e45af092081699\n```\n",
+				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+					return bot.NewMarkdownMessage(c.NewSilence(sender, args))
+				},
+			},
+			"del": {
+				Summary: "Delete a silence by ID.",
+				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+					return bot.NewMarkdownMessage(c.DelSilence(args))
+				},
+			},
+		},
+	}
+}
+
+// Run the client in a blocking thread
+func (c *Client) Run() error {
+	err := c.joinRooms(c.Matrix.Config.AllowedRooms)
+	if err != nil {
+		return err
+	}
+
+	return c.Matrix.Run()
 }
 
 // joinRooms joins a list of room IDs or aliases
 func (c *Client) joinRooms(roomList []string) error {
-	c.rooms = make(map[string]struct{})
-
-	// Join all rooms
 	for _, r := range roomList {
-		j, err := c.Matrix.JoinRoom(r, "", nil)
+		err := c.Matrix.NewRoom(r).Join()
 		if err != nil {
 			return err
 		}
-		c.rooms[j.RoomID] = struct{}{}
 	}
 
 	return nil
 }
 
-// sync runs a never ending Matrix sync
-func (c *Client) sync() error {
-	for {
-		err := c.Matrix.Sync()
-		if err != nil {
-			return err
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-// messageHandler handles an incoming event
-func (c *Client) messageHandler(e *gomatrix.Event) {
-	var plain, html string
-	var err error
-
-	// Get message text
-	text, ok := e.Body()
-
-	// Ignore message if:
-	// - no body
-	// - sent by the bot itself
-	// - does not start with command
-	if !ok ||
-		e.Sender == c.Matrix.UserID ||
-		!strings.HasPrefix(text, command) {
-		return
-	}
-
-	// Ignore rooms that are not explicitly allowed when this is configured
-	if !c.checkRoom(e.RoomID) {
-		log.Printf("Ignoring command from non configured room %s: %s", e.RoomID, text)
-		return
-	}
-
-	// Execute the given command
-	plain, html = c.executeCommand(e, strings.Split(text, " ")...)
-
-	err = c.sendMessage(e.RoomID, plain, html)
-	if err != nil {
-		log.Print("Error: ", err)
-	}
-}
-
-// checkRoom returns true if the room is allowed,
-// and false otherwise.
-func (c *Client) checkRoom(roomID string) bool {
-	if c.rooms != nil {
-		if _, ok := c.rooms[roomID]; ok {
-			return true
-		}
-	}
-	return false
-}
-
-// executeCommand executes a command for an event
-func (c *Client) executeCommand(e *gomatrix.Event, cmd ...string) (plain, html string) {
-	switch shortCommand(cmd[1:], 2) {
-	case "l":
-		plain, html = c.Alerts(false, false)
-	case "la":
-		plain, html = c.Alerts(true, false)
-	case "ll":
-		plain, html = c.Alerts(true, true)
-	case "s":
-		plain = c.Silences("active")
-	case "sp":
-		plain = c.Silences("pending")
-	case "se":
-		plain = c.Silences("expired")
-	case "sa":
-		plain = c.NewSilence(e.Sender, cmd[3:])
-	case "sd":
-		plain = c.DelSilence(cmd[3:])
-	default:
-		plain = helpMessage
-	}
-	return
-}
-
-// sendMessage sends a message with the given body
-func (c *Client) sendMessage(roomID, plain, html string) (err error) {
-	// Room to send response to
-	room := c.Matrix.NewRoom(roomID)
-
-	// Send a Markdown message if no HTML is provided
-	if html == "" {
-		_, err = room.SendMarkdown(plain)
-	} else {
-		_, err = room.SendHTML(plain, html)
-	}
-
-	return err
-}
-
 // Alerts returns all or non-silenced alerts
-func (c *Client) Alerts(silenced bool, labels bool) (string, string) {
+func (c *Client) Alerts(silenced bool, labels bool) *bot.Message {
 	alerts, err := c.Alertmanager.GetAlerts(silenced)
 	if err != nil {
-		return err.Error(), ""
+		return bot.NewTextMessage(err.Error())
 	}
 	if len(alerts) == 0 {
-		return "No alerts", ""
+		return bot.NewTextMessage("No alerts")
 	}
 
-	return FormatAlerts(alerts, labels)
+	return bot.NewHTMLMessage(FormatAlerts(alerts, labels))
 }
 
 // Silences returns a Markdown formatted message containing silences with the specified state
