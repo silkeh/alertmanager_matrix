@@ -1,0 +1,83 @@
+---
+stages:
+  - lint
+  - test
+  - build
+
+default:
+  image: golang:1.17-alpine
+  interruptible: true
+  artifacts:
+    expire_in: 1 day
+
+variables:
+  GOPACKAGE: $CI_SERVER_HOST/$CI_PROJECT_PATH
+  GOPATH: $CI_PROJECT_DIR/.go
+  CGO_ENABLED: 0
+
+cache:
+  key: go
+  paths:
+    - .go/
+
+code quality:
+  stage: lint
+  image: golangci/golangci-lint:v1.43.0
+  script:
+    - golangci-lint run --issues-exit-code=0 --out-format=code-climate ./...
+        > gl-code-quality-report.json
+    - golangci-lint run
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+
+license scanning:
+  stage: lint
+  image: licensefinder/license_finder
+  script:
+    - bash -l -c 'license_finder report --format json --save=gl-license-scanning-report.json'
+  artifacts:
+    reports:
+      license_scanning: gl-license-scanning-report.json
+
+dependency scanning:
+  stage: lint
+  image: registry.gitlab.com/gitlab-org/security-products/analyzers/gemnasium
+  script:
+    - /analyzer run
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+
+yamllint:
+  stage: lint
+  image: registry.gitlab.com/pipeline-components/yamllint:latest
+  script:
+    - yamllint .
+
+test:
+  stage: test
+  needs: []
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
+  script:
+    - go install github.com/boumenot/gocover-cobertura@latest
+    - go install gotest.tools/gotestsum@latest
+    - $GOPATH/bin/gotestsum --junitfile report.xml --format testname --
+        -coverpkg=$GOPACKAGE/... -coverprofile=coverage.txt -covermode=count ./...
+    - $GOPATH/bin/gocover-cobertura < coverage.txt > coverage.xml
+    - go tool cover -func=coverage.txt
+  coverage: '/^total:.*\d+\.\d+%$/'
+  artifacts:
+    when: always
+    reports:
+      cobertura: coverage.xml
+      junit: report.xml
+
+build:
+  stage: build
+  script:
+    - go build -ldflags="-s -w"
+  artifacts:
+    paths:
+      - alertmanager_matrix

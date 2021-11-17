@@ -1,0 +1,91 @@
+run:
+  skip-dirs:
+    - .go
+
+linters:
+  enable-all: true
+  disable:
+    - testpackage       # tests are allowed in the same package
+    - tagliatelle       # json schema of Matrix specs is followed
+    - exhaustivestruct  # structs may be uninitialized
+    - nlreturn          # covered by wsl cuddle rules
+    - paralleltest      # tests are acceptable in sequence
+    - nakedret          # naked returns are acceptable
+    - gochecknoglobals  # may be used (sparingly)
+    # deprecated
+    - scopelint
+    - interfacer
+    - maligned
+    - golint
+
+severity:
+  default-severity: major
+
+issues:
+  fast: false
+  exclude-use-default: false
+  exclude-case-sensitive: true
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gochecknoglobals
+
+linters-settings:
+  varnamelen:
+    min-name-length: 1
+
+  goimports:
+    local-prefixes: github.com/silkeh/alertmanager_matrix
+
+  gosec:
+    excludes:
+      - G404
+
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment  # misalignment is accepted
+
+  revive:
+    enable-all-rules: true
+    rules: # see https://github.com/mgechev/revive#recommended-configuration
+      - name: exported
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+  stylecheck:
+    checks: [all]
+
+  wrapcheck:
+    ignoreSigs:
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
+      - time.ParseDuration(
