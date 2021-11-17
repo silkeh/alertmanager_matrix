@@ -57,6 +57,8 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 	if err != nil {
 		log.Fatal("Unable to open JSON file: ", err)
 	}
+	defer file.Close()
+
 	err = json.NewDecoder(file).Decode(m)
 	if err != nil {
 		log.Fatal("Unable to parse JSON file: ", err)
