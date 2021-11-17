@@ -19,12 +19,15 @@ func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) 
 	if roomID == "" {
 		log.Print("Empty room ID")
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
+
 	room := client.Matrix.NewRoom(roomID)
 	if room.ID[0] != '!' {
 		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 
@@ -33,6 +36,7 @@ func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
 		log.Printf("Error parsing message: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 
@@ -53,16 +57,19 @@ func setStringFromEnv(target *string, env string) {
 }
 
 func setMapFromJSONFile(m *map[string]string, fileName string) {
-	file, err := os.Open(fileName)
+	file, err := os.Open(fileName) // #nosec
 	if err != nil {
-		log.Fatal("Unable to open JSON file: ", err)
+		log.Fatalf("Unable to open JSON file %q: %s", fileName, err)
 	}
-	defer file.Close()
 
 	err = json.NewDecoder(file).Decode(m)
 	if err != nil {
-		log.Fatal("Unable to parse JSON file: ", err)
+		_ = file.Close()
+
+		log.Fatalf("Unable to parse JSON file %q: %s", fileName, err)
 	}
+
+	_ = file.Close()
 }
 
 func main() {
@@ -78,7 +85,7 @@ func main() {
 	flag.StringVar(&homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
 	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
 	flag.StringVar(&token, "token", "", "Token to connect with.")
-	flag.StringVar(&rooms, "rooms", "", "Comma separated list of rooms from which commands are allowed. All rooms are allowed by default.")
+	flag.StringVar(&rooms, "rooms", "", "Comma separated list of allowed rooms. All rooms are allowed by default.")
 	flag.StringVar(&alertmanagerURL, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
@@ -97,6 +104,7 @@ func main() {
 	if iconFile != "" {
 		setMapFromJSONFile(&bot.AlertIcons, iconFile)
 	}
+
 	if colorFile != "" {
 		setMapFromJSONFile(&bot.AlertColors, colorFile)
 	}
@@ -106,7 +114,8 @@ func main() {
 		log.Fatal("Error: user ID or token not supplied")
 	}
 
-	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s", homeserver, userID, alertmanagerURL)
+	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s",
+		homeserver, userID, alertmanagerURL)
 
 	client, err := bot.NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
 	if err != nil {

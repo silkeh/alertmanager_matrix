@@ -2,14 +2,25 @@ package bot
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/prometheus/alertmanager/types"
+
 	"github.com/silkeh/alertmanager_matrix/alertmanager"
 )
 
-// AlertIcons represent the icons corresponding to the alert status
+const (
+	summaryAnnotation  = "summary"
+	resolvedAnnotation = "resolved"
+	alertStatus        = "alert"
+	resolvedStatus     = "resolved"
+	suppressedStatus   = "suppressed"
+	silencedStatus     = "suppressed"
+	severityLabel      = "severity"
+	alertNameLabel     = "alertname"
+)
+
+// AlertIcons represent the icons corresponding to the alert status.
 var AlertIcons = map[string]string{
 	"alert":       "🔔️",
 	"information": "ℹ️",
@@ -19,7 +30,7 @@ var AlertIcons = map[string]string{
 	"silenced":    "🔕",
 }
 
-// AlertColors represent the colors corresponding to the alert status
+// AlertColors represent the colors corresponding to the alert status.
 var AlertColors = map[string]string{
 	"alert":       "black",
 	"information": "blue",
@@ -29,25 +40,25 @@ var AlertColors = map[string]string{
 	"silenced":    "gray",
 }
 
-// icon returns the icon for a string
+// icon returns the icon for a string.
 func icon(t string) string {
 	if e, ok := AlertIcons[t]; ok {
 		return e
 	}
-	log.Printf("Unknown status: %s", t)
+
 	return "❔"
 }
 
-// color returns the color for string
+// color returns the color for string.
 func color(t string) string {
 	if c, ok := AlertColors[t]; ok {
 		return c
 	}
-	log.Printf("Unknown status: %s", t)
+
 	return "gray"
 }
 
-// CreateMessage formats a message using the status, name and summary
+// CreateMessage formats a message using the status, name and summary.
 func CreateMessage(status, name, summary, id string) (plain, html string) {
 	icon := icon(status)
 	color := color(status)
@@ -63,33 +74,15 @@ func CreateMessage(status, name, summary, id string) (plain, html string) {
 	return
 }
 
-// FormatAlerts formats alerts as plain text and HTML
+// FormatAlerts formats alerts as plain text and HTML.
 func FormatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 	plain := make([]string, len(alerts))
 	html := make([]string, len(alerts))
 
 	for i, a := range alerts {
-		status := "alert"
-		if a.Status == "resolved" {
-			status = "resolved"
-		} else if a.Status == "suppressed" {
-			status = "silenced"
-		} else if sev, ok := a.Labels["severity"]; ok {
-			status = string(sev)
-		}
-
-		summary := ""
-		if v, ok := a.Annotations["summary"]; ok {
-			summary = string(v)
-		}
-		if v, ok := a.Annotations["resolved"]; ok && status == "resolved" {
-			summary = string(v)
-		}
-
-		alertName := ""
-		if v, ok := a.Labels["alertname"]; ok {
-			alertName = string(v)
-		}
+		status := statusString(a)
+		summary := summaryString(a)
+		alertName := alertNameString(a)
 
 		// Format main message
 		plain[i], html[i] = CreateMessage(status, alertName, summary, a.Fingerprint)
@@ -98,10 +91,12 @@ func FormatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 		if labels {
 			pls := make([]string, 0, len(a.Labels))
 			hls := make([]string, 0, len(a.Labels))
+
 			for n, v := range a.Labels {
 				pls = append(pls, fmt.Sprintf(`%s="%s"`, n, v))
 				hls = append(hls, fmt.Sprintf("<code>%s=\"%s\"</code>", n, v))
 			}
+
 			plain[i] += ", labels:" + strings.Join(pls, " ")
 			html[i] += "<br/><b>Labels:</b> " + strings.Join(hls, " ")
 		}
@@ -127,6 +122,7 @@ func FormatSilences(silences []*types.Silence, state string) string {
 			endStr = "Ended"
 		}
 
+		matchers := make([]string, len(s.Matchers))
 		md += fmt.Sprintf(
 			"**Silence %s**  \n%s at %s\n\n",
 			s.ID,
@@ -134,16 +130,50 @@ func FormatSilences(silences []*types.Silence, state string) string {
 			s.EndsAt.Format("2006-01-02 15:04"),
 		)
 
-		matchers := make([]string, len(s.Matchers))
 		for i, m := range s.Matchers {
 			sep := "="
 			if m.IsRegex {
 				sep = "=~"
 			}
+
 			matchers[i] = fmt.Sprintf("`%s%s%q`", m.Name, sep, m.Value)
 		}
+
 		md += strings.Join(matchers, ", ") + "\n\n"
 	}
 
 	return md
+}
+
+func statusString(a *alertmanager.Alert) (status string) {
+	status = alertStatus
+	if a.Status == resolvedStatus {
+		status = resolvedStatus
+	} else if a.Status == suppressedStatus {
+		status = silencedStatus
+	} else if sev, ok := a.Labels[severityLabel]; ok {
+		status = string(sev)
+	}
+
+	return
+}
+
+func summaryString(a *alertmanager.Alert) (summary string) {
+	if v, ok := a.Annotations[summaryAnnotation]; ok {
+		summary = string(v)
+	}
+
+	if v, ok := a.Annotations[resolvedAnnotation]; ok && a.Status == resolvedStatus {
+		summary = string(v)
+	}
+
+	return
+}
+
+func alertNameString(a *alertmanager.Alert) (name string) {
+	if v, ok := a.Labels[alertNameLabel]; ok {
+		name = string(v)
+	}
+
+	return
 }

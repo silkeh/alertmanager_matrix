@@ -1,25 +1,28 @@
+// Package alertmanager contains a simple Prometheus Alertmanager client.
 package alertmanager
 
 import (
 	"context"
+	"fmt"
 
 	alertmanager "github.com/prometheus/alertmanager/client"
 	"github.com/prometheus/client_golang/api"
 )
 
-// Client represends a multi-functional Alertmanager API client
+// Client represends a multi-functional Alertmanager API client.
 type Client struct {
 	Alert   alertmanager.AlertAPI
 	Silence alertmanager.SilenceAPI
 	Status  alertmanager.StatusAPI
 }
 
-// NewClient creates an Alertmanager API client
+// NewClient creates an Alertmanager API client.
 func NewClient(url string) (*Client, error) {
 	c, err := api.NewClient(api.Config{Address: url})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating alertmanager client: %w", err)
 	}
+
 	client := &Client{
 		Alert:   alertmanager.NewAlertAPI(c),
 		Silence: alertmanager.NewSilenceAPI(c),
@@ -31,10 +34,10 @@ func NewClient(url string) (*Client, error) {
 
 // GetAlerts retrieves all silenced or non-silenced alerts.
 func (am Client) GetAlerts(silenced bool) ([]*Alert, error) {
-	alerts, err := am.Alert.List(context.TODO(), "", "",
+	alerts, err := am.Alert.List(context.Background(), "", "",
 		silenced, false, true, true)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error retrieving commands from alertmanager: %w", err)
 	}
 
 	// Map alerts to compatible type
@@ -49,7 +52,7 @@ func (am Client) GetAlerts(silenced bool) ([]*Alert, error) {
 	return as, nil
 }
 
-// GetAlert retrieves an alert with a given ID
+// GetAlert retrieves an alert with a given ID.
 func (am Client) GetAlert(id string) (alert *Alert, err error) {
 	alerts, err := am.GetAlerts(true)
 	if err != nil {
