@@ -100,13 +100,8 @@ func main() {
 	}
 
 	// Check if user is set
-	if userID == "" {
-		log.Fatal("Error: no user ID")
-	}
-
-	// Check if token is set
-	if userID == "" {
-		log.Fatal("Error: no token")
+	if userID == "" || token == "" {
+		log.Fatal("Error: user ID or token not supplied")
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s", homeserver, userID, alertmanagerURL)
