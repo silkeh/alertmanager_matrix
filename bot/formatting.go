@@ -82,6 +82,9 @@ func FormatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
 		if v, ok := a.Annotations["summary"]; ok {
 			summary = string(v)
 		}
+		if v, ok := a.Annotations["resolved"]; ok && status == "resolved" {
+			summary = string(v)
+		}
 
 		alertName := ""
 		if v, ok := a.Labels["alertname"]; ok {
