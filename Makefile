@@ -28,7 +28,7 @@ rpm: dist
 	cd $(ROOT_DIR) || exit $$? ; rpmbuild --define "_srcrpmdir ." --define "_rpmdir builddir.rpm" -ta `rpmspec -q --queryformat '%{name}-%{version}.tar.gz\n' *spec | head -1`
 	cd $(ROOT_DIR) ; mv -f builddir.rpm/*/* . && rm -rf builddir.rpm
 
-bin/$(PROGNAME): alertmanager_matrix.go go.mod go.sum bot/*.go matrix/*.go alertmanager/*.go
+bin/$(PROGNAME): $(wildcard *.go) $(wildcard */*.go)
 	GOBIN=$(ROOT_DIR)/bin go install -mod=vendor ./...
 
 $(PROGNAME).service: $(PROGNAME).service.in
