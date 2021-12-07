@@ -2,8 +2,10 @@
 
 %define mybuildnumber %{?build_number}%{?!build_number:1}
 
+%define gitversion %(git describe --tags | sed 's/^v//' | sed 's/-.*//')
+
 Name:           alertmanager_matrix
-Version:        0.0.11
+Version:        %{gitversion}
 Release:        %{mybuildnumber}%{?dist}
 Summary:        Service for sending alerts from the Alertmanager webhook to a Matrix room and managing Alertmanager.
 
