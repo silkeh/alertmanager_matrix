@@ -29,7 +29,7 @@ rpm: dist
 	cd $(ROOT_DIR) ; mv -f builddir.rpm/*/* . && rm -rf builddir.rpm
 
 bin/$(PROGNAME): $(wildcard *.go) $(wildcard */*.go)
-	GOBIN=$(ROOT_DIR)/bin go install -mod=vendor ./...
+	@mkdir -p $(@D) && go build -o $@
 
 $(PROGNAME).service: $(PROGNAME).service.in
 	sed 's|@BINDIR@|$(BINDIR)|g;s|@DEFAULTDIR@|$(DEFAULTDIR)|g' < $< > $@
