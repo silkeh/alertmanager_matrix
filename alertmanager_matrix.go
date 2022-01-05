@@ -12,9 +12,25 @@ import (
 	"github.com/silkeh/alertmanager_matrix/bot"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+type clientHandler struct {
+	client *bot.Client
+}
+
+func (c *clientHandler) handler(w http.ResponseWriter, r *http.Request) {
+	client := c.client
+	if client == nil {
+		log.Print("Not connected to Matrix")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	// Get room from request
-	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
+	roomID := mux.Vars(r)["room"]
+	if roomID == "" {
+		log.Print("Empty room ID")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	room := client.Matrix.NewRoom(roomID)
 	if room.ID[0] != '!' {
 		log.Print("Invalid room ID: ", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
@@ -56,9 +72,6 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 	}
 }
 
-// Main client
-var client *bot.Client
-
 func main() {
 	var (
 		addr                             string // Listen address
@@ -83,6 +96,8 @@ func main() {
 	setStringFromEnv(&homeserver, "HOMESERVER")
 	setStringFromEnv(&userID, "USER_ID")
 	setStringFromEnv(&token, "TOKEN")
+	setStringFromEnv(&alertmanagerURL, "ALERTMANAGER")
+	setStringFromEnv(&rooms, "ROOMS")
 
 	// Load mappings from files
 	if iconFile != "" {
@@ -108,7 +123,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
-
 	// Start syncing
 	go func() {
 		log.Fatal(client.Run())
@@ -116,7 +130,8 @@ func main() {
 
 	// Create/start HTTP server
 	r := mux.NewRouter()
-	r.HandleFunc("/{room}", handler).Methods("POST")
+	bc := &clientHandler{client}
+	r.HandleFunc("/{room}", bc.handler).Methods("POST")
 	log.Print("Listening on ", addr)
 	log.Fatal(http.ListenAndServe(addr, r))
 }
