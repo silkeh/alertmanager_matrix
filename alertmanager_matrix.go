@@ -15,17 +15,9 @@ import (
 
 func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	roomID := mux.Vars(r)["room"]
-	if roomID == "" {
-		log.Print("Empty room ID")
-		w.WriteHeader(http.StatusBadRequest)
-
-		return
-	}
-
-	room := client.Matrix.NewRoom(roomID)
-	if room.ID[0] != '!' {
-		log.Print("Invalid room ID: ", room.ID)
+	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
+	if room.ID == "" || room.ID[0] != '!' {
+		log.Printf("Invalid room ID: %q", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
