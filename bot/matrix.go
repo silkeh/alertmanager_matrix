@@ -3,6 +3,7 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,38 +15,63 @@ import (
 	"github.com/silkeh/alertmanager_matrix/alertmanager"
 )
 
+var errNilClientConfig = errors.New("client config cannot be nil")
+
+// ClientConfig contains the configuration for the client.
+type ClientConfig struct {
+	Homeserver      string     // Matrix homeserver URL.
+	UserID          string     // Matrix user ID.
+	Token           string     // Matrix token.
+	MessageType     string     // Matrix message type (optional).
+	Rooms           string     // Comma-separated list of matrix rooms (optional).
+	AlertManagerURL string     // URL to the Alert Manager API.
+	Formatter       *Formatter // Formatter (optional).
+}
+
 // Client represents an Alertmanager/Matrix client.
 type Client struct {
 	Matrix       *bot.Client
 	Alertmanager *alertmanager.Client
+	Formatter    *Formatter
 }
 
 // NewClient creates and starts a new Alertmanager/Matrix client.
-func NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL string) (client *Client, err error) {
-	client = new(Client)
+func NewClient(config *ClientConfig) (client *Client, err error) {
+	if config == nil {
+		return nil, errNilClientConfig
+	}
+
+	client = &Client{
+		Formatter: config.Formatter,
+	}
+
+	// Ensure a formatter is set
+	if client.Formatter == nil {
+		client.Formatter = NewFormatter()
+	}
 
 	// Create Alertmanager client
-	client.Alertmanager, err = alertmanager.NewClient(alertmanagerURL)
+	client.Alertmanager, err = alertmanager.NewClient(config.AlertManagerURL)
 	if err != nil {
 		return
 	}
 
 	// Matrix bot config
 	matrixConfig := &bot.ClientConfig{
-		MessageType:      messageType,
+		MessageType:      config.MessageType,
 		CommandPrefixes:  []string{"!alert", "!alertmanager"},
 		IgnoreHighlights: false,
 	}
 
 	// Create Matrix client
-	client.Matrix, err = bot.NewClient(homeserver, userID, token, matrixConfig)
+	client.Matrix, err = bot.NewClient(config.Homeserver, config.UserID, config.Token, matrixConfig)
 	if err != nil {
 		return
 	}
 
 	// Create room list
-	if rooms != "" {
-		matrixConfig.AllowedRooms = strings.Split(rooms, ",")
+	if config.Rooms != "" {
+		matrixConfig.AllowedRooms = strings.Split(config.Rooms, ",")
 	}
 
 	// Register commands
@@ -178,7 +204,7 @@ func (c *Client) Alerts(silenced bool, labels bool) *bot.Message {
 		return bot.NewTextMessage("No alerts")
 	}
 
-	return bot.NewHTMLMessage(FormatAlerts(alerts, labels))
+	return bot.NewHTMLMessage(c.Formatter.FormatAlerts(alerts, labels))
 }
 
 // Silences returns a Markdown formatted message containing silences with the specified state.
@@ -188,7 +214,7 @@ func (c *Client) Silences(state string) string {
 		return err.Error()
 	}
 
-	md := FormatSilences(silences, state)
+	md := c.Formatter.FormatSilences(silences, state)
 
 	if md == "" {
 		return fmt.Sprintf("No %s silences", state)

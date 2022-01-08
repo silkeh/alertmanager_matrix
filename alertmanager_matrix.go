@@ -33,7 +33,7 @@ func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create readable messages for Matrix
-	plain, html := bot.FormatAlerts(data.Alerts, false)
+	plain, html := client.Formatter.FormatAlerts(data.Alerts, false)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
 	if _, err := room.SendHTML(plain, html); err != nil {
@@ -49,7 +49,7 @@ func setStringFromEnv(target *string, env string) {
 }
 
 func setMapFromJSONFile(m *map[string]string, fileName string) {
-	file, err := os.Open(fileName) // #nosec
+	file, err := os.Open(fileName) // nolint:gosec // file inclusion is the point
 	if err != nil {
 		log.Fatalf("Unable to open JSON file %q: %s", fileName, err)
 	}
@@ -65,51 +65,45 @@ func setMapFromJSONFile(m *map[string]string, fileName string) {
 }
 
 func main() {
-	var (
-		err                              error
-		addr                             string // Listen address
-		homeserver, userID, token, rooms string // Matrix connection settings
-		alertmanagerURL                  string // Alertmanager settings
-		iconFile, colorFile, messageType string // Formatting settings
-	)
+	var addr, iconFile, colorFile string
+
+	config := bot.ClientConfig{Formatter: bot.NewFormatter()}
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
-	flag.StringVar(&homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
-	flag.StringVar(&userID, "userID", "", "User ID to connect with.")
-	flag.StringVar(&token, "token", "", "Token to connect with.")
-	flag.StringVar(&rooms, "rooms", "", "Comma separated list of allowed rooms. All rooms are allowed by default.")
-	flag.StringVar(&alertmanagerURL, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
+	flag.StringVar(&config.Homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
+	flag.StringVar(&config.UserID, "userID", "", "User ID to connect with.")
+	flag.StringVar(&config.Token, "token", "", "Token to connect with.")
+	flag.StringVar(&config.Rooms, "rooms", "", "Comma separated list of allowed rooms. All rooms are allowed by default.")
+	flag.StringVar(&config.AlertManagerURL, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
+	flag.StringVar(&config.MessageType, "message-type", "m.notice", "Type of message the bot uses.")
 	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
 	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
-	flag.StringVar(&messageType, "message-type", "m.notice", "Type of message the bot uses.")
 	flag.Parse()
 
 	// Set variables from the environment
 	setStringFromEnv(&addr, "ADDR")
-	setStringFromEnv(&homeserver, "HOMESERVER")
-	setStringFromEnv(&userID, "USER_ID")
-	setStringFromEnv(&token, "TOKEN")
-	setStringFromEnv(&alertmanagerURL, "ALERTMANAGER")
-	setStringFromEnv(&rooms, "ROOMS")
+	setStringFromEnv(&config.Homeserver, "HOMESERVER")
+	setStringFromEnv(&config.UserID, "USER_ID")
+	setStringFromEnv(&config.Token, "TOKEN")
+	setStringFromEnv(&config.AlertManagerURL, "ALERTMANAGER")
+	setStringFromEnv(&config.Rooms, "ROOMS")
 
-	// Load mappings from files
 	if iconFile != "" {
-		setMapFromJSONFile(&bot.AlertIcons, iconFile)
+		setMapFromJSONFile(&config.Formatter.Icons, iconFile)
 	}
 
 	if colorFile != "" {
-		setMapFromJSONFile(&bot.AlertColors, colorFile)
+		setMapFromJSONFile(&config.Formatter.Colors, colorFile)
 	}
 
-	// Check if user is set
-	if userID == "" || token == "" {
+	if config.UserID == "" || config.Token == "" {
 		log.Fatal("Error: user ID or token not supplied")
 	}
 
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s",
-		homeserver, userID, alertmanagerURL)
+		config.Homeserver, config.UserID, config.AlertManagerURL)
 
-	client, err := bot.NewClient(homeserver, userID, token, messageType, rooms, alertmanagerURL)
+	client, err := bot.NewClient(&config)
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
