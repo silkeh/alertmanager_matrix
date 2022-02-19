@@ -3,28 +3,35 @@ module github.com/silkeh/alertmanager_matrix
 go 1.17
 
 require (
-	github.com/gorilla/mux v1.7.4
-	github.com/prometheus/alertmanager v0.20.0
-	github.com/prometheus/client_golang v1.2.1
+	github.com/gorilla/mux v1.8.0
+	github.com/prometheus/alertmanager v0.23.0
+	github.com/prometheus/client_golang v1.12.1
 	gitlab.com/silkeh/matrix-bot v0.0.0-20220108152249-8b2d6ecea043
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.43.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.0 // indirect
-	github.com/go-kit/kit v0.9.0 // indirect
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
-	github.com/golang/protobuf v1.3.2 // indirect
-	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/go-kit/log v0.2.0 // indirect
+	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/matrix-org/gomatrix v0.0.0-20210324163249-be2af5ef2e16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
-	github.com/prometheus/common v0.7.0 // indirect
-	github.com/prometheus/procfs v0.0.5 // indirect
+	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
+	github.com/prometheus/common/sigv4 v0.1.0 // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

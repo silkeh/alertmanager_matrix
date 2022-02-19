@@ -101,12 +101,12 @@ func (f *Formatter) FormatAlerts(alerts []*alertmanager.Alert, labels bool) (str
 			hls := make([]string, 0, len(a.Labels))
 
 			for n, v := range a.Labels {
-				pls = append(pls, fmt.Sprintf(`%s="%s"`, n, v))
-				hls = append(hls, fmt.Sprintf("<code>%s=\"%s\"</code>", n, v))
+				pls = append(pls, fmt.Sprintf(`%s=%q`, n, v))
+				hls = append(hls, fmt.Sprintf("%s=%q", n, v))
 			}
 
-			plain[i] += ", labels:" + strings.Join(pls, " ")
-			html[i] += "<br/><b>Labels:</b> " + strings.Join(hls, " ")
+			plain[i] += ", labels: {" + strings.Join(pls, ",") + "}"
+			html[i] += "<br/><b>Labels:</b> <code>{" + strings.Join(hls, ",") + "}</code>"
 		}
 	}
 
@@ -117,9 +117,7 @@ func (f *Formatter) FormatAlerts(alerts []*alertmanager.Alert, labels bool) (str
 }
 
 // FormatSilences formats silences as Markdown.
-func (f *Formatter) FormatSilences(silences []*types.Silence, state string) string {
-	md := ""
-
+func (f *Formatter) FormatSilences(silences []*types.Silence, state string) (md string) {
 	for _, s := range silences {
 		if s.Status.State != types.SilenceState(state) {
 			continue
@@ -130,24 +128,13 @@ func (f *Formatter) FormatSilences(silences []*types.Silence, state string) stri
 			endStr = "Ended"
 		}
 
-		matchers := make([]string, len(s.Matchers))
 		md += fmt.Sprintf(
-			"**Silence %s**  \n%s at %s\n\n",
+			"**Silence %s**  \n%s at %s  \nMatches:`%s`\n\n",
 			s.ID,
 			endStr,
-			s.EndsAt.Format("2006-01-02 15:04"),
+			s.EndsAt.Format("2006-01-02 15:04:05 MST"),
+			s.Matchers.String(),
 		)
-
-		for i, m := range s.Matchers {
-			sep := "="
-			if m.IsRegex {
-				sep = "=~"
-			}
-
-			matchers[i] = fmt.Sprintf("`%s%s%q`", m.Name, sep, m.Value)
-		}
-
-		md += strings.Join(matchers, ", ") + "\n\n"
 	}
 
 	return md

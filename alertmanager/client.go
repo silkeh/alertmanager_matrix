@@ -9,7 +9,7 @@ import (
 	"github.com/prometheus/client_golang/api"
 )
 
-// Client represends a multi-functional Alertmanager API client.
+// Client represents a multi-functional Alertmanager API client.
 type Client struct {
 	Alert   alertmanager.AlertAPI
 	Silence alertmanager.SilenceAPI
@@ -33,7 +33,7 @@ func NewClient(url string) (*Client, error) {
 }
 
 // GetAlerts retrieves all silenced or non-silenced alerts.
-func (am Client) GetAlerts(silenced bool) ([]*Alert, error) {
+func (am *Client) GetAlerts(silenced bool) ([]*Alert, error) {
 	alerts, err := am.Alert.List(context.Background(), "", "",
 		silenced, false, true, true)
 	if err != nil {
@@ -53,7 +53,7 @@ func (am Client) GetAlerts(silenced bool) ([]*Alert, error) {
 }
 
 // GetAlert retrieves an alert with a given ID.
-func (am Client) GetAlert(id string) (alert *Alert, err error) {
+func (am *Client) GetAlert(id string) (alert *Alert, err error) {
 	alerts, err := am.GetAlerts(true)
 	if err != nil {
 		return nil, err

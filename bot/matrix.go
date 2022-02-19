@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/prometheus/alertmanager/types"
 	bot "gitlab.com/silkeh/matrix-bot"
 
@@ -153,7 +153,7 @@ func (c *Client) silenceCommand() *bot.Command {
 						return bot.NewTextMessage("Insufficient arguments.")
 					}
 
-					return bot.NewMarkdownMessage(c.NewSilence(sender, args[0], args[1:]))
+					return bot.NewMarkdownMessage(c.NewSilence(sender, args[0], strings.Join(args[1:], " ")))
 				},
 			},
 			"del": {
@@ -224,14 +224,14 @@ func (c *Client) Silences(state string) string {
 }
 
 // NewSilence creates a new silence and returns the ID.
-func (c *Client) NewSilence(author, durationStr string, matchers []string) string {
+func (c *Client) NewSilence(author, durationStr string, matchers string) string {
 	duration, err := parseDuration(durationStr)
 	if err != nil {
 		return err.Error()
 	}
 
 	silence := types.Silence{
-		Matchers:  make(types.Matchers, len(matchers)),
+		Matchers:  make(labels.Matchers, len(matchers)),
 		StartsAt:  time.Now(),
 		EndsAt:    time.Now().Add(duration),
 		CreatedBy: author,
@@ -239,15 +239,15 @@ func (c *Client) NewSilence(author, durationStr string, matchers []string) strin
 	}
 
 	// Check if an ID is given instead of matchers
-	if len(matchers) == 1 && !strings.ContainsRune(matchers[0], '=') {
-		res := c.addSilenceForFingerprint(&silence, matchers[0])
+	if len(matchers) == 1 && !strings.ContainsAny(matchers, `=~`) {
+		res := c.addSilenceForFingerprint(&silence, matchers)
 		if res != "" {
 			return res
 		}
 	} else {
-		res := c.parseMatchers(&silence, matchers)
-		if res != "" {
-			return res
+		silence.Matchers, err = labels.ParseMatchers(matchers)
+		if err != nil {
+			return fmt.Sprintf("Invalid matchers: %s", err)
 		}
 	}
 
@@ -269,29 +269,12 @@ func (c *Client) addSilenceForFingerprint(silence *types.Silence, fingerprint st
 		return fmt.Sprintf("No alert with fingerprint %s", fingerprint)
 	}
 
-	silence.Matchers = make(types.Matchers, 0, len(alert.Labels))
+	silence.Matchers = make(labels.Matchers, 0, len(alert.Labels))
 	for name, value := range alert.Labels {
-		silence.Matchers = append(silence.Matchers, &types.Matcher{
+		silence.Matchers = append(silence.Matchers, &labels.Matcher{
 			Name:  string(name),
 			Value: string(value),
 		})
-	}
-
-	return ""
-}
-
-func (c *Client) parseMatchers(silence *types.Silence, matchers []string) string {
-	for i, m := range matchers {
-		ms := regexp.MustCompile(`(.*)=(~?)"(.*)"`).FindStringSubmatch(m)
-		if ms == nil {
-			return "Invalid matcher: " + m
-		}
-
-		silence.Matchers[i] = &types.Matcher{
-			Name:    ms[1],
-			Value:   ms[3],
-			IsRegex: ms[2] == "~",
-		}
 	}
 
 	return ""
