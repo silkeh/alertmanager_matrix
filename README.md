@@ -29,27 +29,14 @@ When the `-rooms` option is provided the bot will join the listed rooms and
 only allow commands from these rooms.
 The service will *not* automatically join the room given in a webhook.
 
-The icons and colors can be configured by providing a JSON file.
-The defaults are:
+## Message customization
 
-```json
-{
-	"alert":       "🔔️",
-	"information": "ℹ️",
-	"warning":     "⚠️",
-	"critical":    "🚨",
-	"ok":          "✅",
-	"silenced":    "🔕"
-}
-```
+The alert messages can be customized by providing custom templates using the `-text-template` and `-html-template` flags.
+The built-in default templates can be found in [the documentation][constants].
 
-```json
-{
-	"alert":       "black",
-	"information": "blue",
-	"warning":     "orange",
-	"critical":    "red",
-	"ok":          "green",
-	"silenced":    "gray"
-}
-```
+The icons and colors define the behaviour of the built-in `icon` and `color` templating functions.
+They can be configured by providing a YAML file using `-icon-file` and `-color-file` respectively.
+See [the documentation][variables] for the default values.
+
+[constants]: https://pkg.go.dev/github.com/silkeh/alertmanager_matrix/bot#pkg-constants
+[variables]: https://pkg.go.dev/github.com/silkeh/alertmanager_matrix/bot#pkg-variables

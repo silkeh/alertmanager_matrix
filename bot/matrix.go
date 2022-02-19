@@ -19,13 +19,12 @@ var errNilClientConfig = errors.New("client config cannot be nil")
 
 // ClientConfig contains the configuration for the client.
 type ClientConfig struct {
-	Homeserver      string     // Matrix homeserver URL.
-	UserID          string     // Matrix user ID.
-	Token           string     // Matrix token.
-	MessageType     string     // Matrix message type (optional).
-	Rooms           string     // Comma-separated list of matrix rooms (optional).
-	AlertManagerURL string     // URL to the Alert Manager API.
-	Formatter       *Formatter // Formatter (optional).
+	Homeserver      string // Matrix homeserver URL.
+	UserID          string // Matrix user ID.
+	Token           string // Matrix token.
+	MessageType     string // Matrix NewMessage type (optional).
+	Rooms           string // Comma-separated list of matrix rooms (optional).
+	AlertManagerURL string // URL to the Alert Manager API.
 }
 
 // Client represents an Alertmanager/Matrix client.
@@ -36,18 +35,18 @@ type Client struct {
 }
 
 // NewClient creates and starts a new Alertmanager/Matrix client.
-func NewClient(config *ClientConfig) (client *Client, err error) {
+func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err error) {
 	if config == nil {
 		return nil, errNilClientConfig
 	}
 
 	client = &Client{
-		Formatter: config.Formatter,
+		Formatter: formatter,
 	}
 
 	// Ensure a formatter is set
 	if client.Formatter == nil {
-		client.Formatter = NewFormatter()
+		client.Formatter = NewFormatter("", "", nil, nil)
 	}
 
 	// Create Alertmanager client
@@ -207,7 +206,7 @@ func (c *Client) Alerts(silenced bool, labels bool) *bot.Message {
 	return bot.NewHTMLMessage(c.Formatter.FormatAlerts(alerts, labels))
 }
 
-// Silences returns a Markdown formatted message containing silences with the specified state.
+// Silences returns a Markdown formatted NewMessage containing silences with the specified state.
 func (c *Client) Silences(state string) string {
 	silences, err := c.Alertmanager.Silence.List(context.TODO(), "")
 	if err != nil {

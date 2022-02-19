@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v3"
 
 	"github.com/silkeh/alertmanager_matrix/alertmanager"
 	"github.com/silkeh/alertmanager_matrix/bot"
@@ -48,26 +49,64 @@ func setStringFromEnv(target *string, env string) {
 	}
 }
 
-func setMapFromJSONFile(m *map[string]string, fileName string) {
-	file, err := os.Open(fileName) // nolint:gosec // file inclusion is the point
+func loadFile(fileName string) string {
+	contents, err := os.ReadFile(fileName) // nolint:gosec // contents inclusion is the point
 	if err != nil {
-		log.Fatalf("Unable to open JSON file %q: %s", fileName, err)
+		log.Fatalf("Unable to read file %q: %s", fileName, err)
 	}
 
-	err = json.NewDecoder(file).Decode(m)
+	return string(contents)
+}
+
+func mapFromYAMLFile(fileName string) map[string]string {
+	file, err := os.Open(fileName) // nolint:gosec // file inclusion is the point
+	if err != nil {
+		log.Fatalf("Unable to open YAML file %q: %s", fileName, err)
+	}
+
+	m := make(map[string]string)
+
+	err = yaml.NewDecoder(file).Decode(m)
 	if err != nil {
 		_ = file.Close()
 
-		log.Fatalf("Unable to parse JSON file %q: %s", fileName, err)
+		log.Fatalf("Unable to parse YAML file %q: %s", fileName, err)
 	}
 
 	_ = file.Close()
+
+	return m
+}
+
+func formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile string) *bot.Formatter {
+	var (
+		colors, icons              map[string]string
+		htmlTemplate, textTemplate string
+	)
+
+	if colorFile != "" {
+		colors = mapFromYAMLFile(colorFile)
+	}
+
+	if iconFile != "" {
+		icons = mapFromYAMLFile(iconFile)
+	}
+
+	if htmlTemplateFile != "" {
+		htmlTemplate = loadFile(htmlTemplateFile)
+	}
+
+	if textTemplateFile != "" {
+		textTemplate = loadFile(textTemplateFile)
+	}
+
+	return bot.NewFormatter(textTemplate, htmlTemplate, colors, icons)
 }
 
 func main() {
-	var addr, iconFile, colorFile string
+	var addr, iconFile, colorFile, htmlTemplateFile, textTemplateFile string
 
-	config := bot.ClientConfig{Formatter: bot.NewFormatter()}
+	config := bot.ClientConfig{}
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&config.Homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
@@ -76,8 +115,10 @@ func main() {
 	flag.StringVar(&config.Rooms, "rooms", "", "Comma separated list of allowed rooms. All rooms are allowed by default.")
 	flag.StringVar(&config.AlertManagerURL, "alertmanager", "http://localhost:9093", "Alertmanager to connect to.")
 	flag.StringVar(&config.MessageType, "message-type", "m.notice", "Type of message the bot uses.")
-	flag.StringVar(&iconFile, "icon-file", "", "JSON file with icons for message types.")
-	flag.StringVar(&colorFile, "color-file", "", "JSON file with colors for message types.")
+	flag.StringVar(&iconFile, "icon-file", "", "YAML file with icons for message types.")
+	flag.StringVar(&colorFile, "color-file", "", "YAML file with colors for message types.")
+	flag.StringVar(&htmlTemplateFile, "html-template", "", "HTML template for alert messages.")
+	flag.StringVar(&textTemplateFile, "text-template", "", "Plain-text template for alert messages.")
 	flag.Parse()
 
 	// Set variables from the environment
@@ -88,14 +129,6 @@ func main() {
 	setStringFromEnv(&config.AlertManagerURL, "ALERTMANAGER")
 	setStringFromEnv(&config.Rooms, "ROOMS")
 
-	if iconFile != "" {
-		setMapFromJSONFile(&config.Formatter.Icons, iconFile)
-	}
-
-	if colorFile != "" {
-		setMapFromJSONFile(&config.Formatter.Colors, colorFile)
-	}
-
 	if config.UserID == "" || config.Token == "" {
 		log.Fatal("Error: user ID or token not supplied")
 	}
@@ -103,7 +136,7 @@ func main() {
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s",
 		config.Homeserver, config.UserID, config.AlertManagerURL)
 
-	client, err := bot.NewClient(&config)
+	client, err := bot.NewClient(&config, formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile))
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
