@@ -2,7 +2,7 @@
 
 %define mybuildnumber %{?build_number}%{?!build_number:1}
 
-%define gitversion %(git describe --tags | sed 's/^v//' | sed 's/-.*//')
+%define gitversion %(sed 's/^v//' %{_sourcedir}/.version | sed 's/-.*//')
 
 Name:           alertmanager_matrix
 Version:        %{gitversion}
@@ -11,7 +11,8 @@ Summary:        Service for sending alerts from the Alertmanager webhook to a Ma
 
 License:        EUPLv1.2
 URL:            https://github.com/silkeh/%{name}
-Source0:        https://github.com/silkeh/%{name}/archive/{%version}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:        sources.tar.gz
+Source1:        .version
 
 BuildRequires:  make
 BuildRequires:  golang
@@ -27,7 +28,7 @@ Please see README.md enclosed in the package for instructions on how to use
 this software.
 
 %prep
-%setup -q
+%setup -q -c
 
 %build
 # variables must be kept in sync with install

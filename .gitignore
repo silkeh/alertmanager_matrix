@@ -1,5 +1,6 @@
 /alertmanager_matrix
-alertmanager_matrix.service
-bin
+/alertmanager_matrix.service
 *.tar.gz
 *.rpm
+/vendor
+/.version
