@@ -8,7 +8,7 @@ import (
 
 	"github.com/prometheus/alertmanager/types"
 
-	"github.com/silkeh/alertmanager_matrix/alertmanager"
+	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"
 )
 
 // Default alert template values.

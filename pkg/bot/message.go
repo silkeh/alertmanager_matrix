@@ -1,7 +1,7 @@
 package bot
 
 import (
-	"github.com/silkeh/alertmanager_matrix/alertmanager"
+	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"
 )
 
 // Message represents the information for a single alert message.

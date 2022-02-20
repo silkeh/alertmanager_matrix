@@ -10,11 +10,11 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 
-	"github.com/silkeh/alertmanager_matrix/alertmanager"
-	"github.com/silkeh/alertmanager_matrix/bot"
+	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"
+	bot2 "github.com/silkeh/alertmanager_matrix/pkg/bot"
 )
 
-func requestHandler(client *bot.Client, w http.ResponseWriter, r *http.Request) {
+func requestHandler(client *bot2.Client, w http.ResponseWriter, r *http.Request) {
 	// Get room from request
 	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
 	if room.ID == "" || room.ID[0] != '!' {
@@ -78,7 +78,7 @@ func mapFromYAMLFile(fileName string) map[string]string {
 	return m
 }
 
-func formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile string) *bot.Formatter {
+func formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile string) *bot2.Formatter {
 	var (
 		colors, icons              map[string]string
 		htmlTemplate, textTemplate string
@@ -100,13 +100,13 @@ func formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile string) *
 		textTemplate = loadFile(textTemplateFile)
 	}
 
-	return bot.NewFormatter(textTemplate, htmlTemplate, colors, icons)
+	return bot2.NewFormatter(textTemplate, htmlTemplate, colors, icons)
 }
 
 func main() {
 	var addr, iconFile, colorFile, htmlTemplateFile, textTemplateFile string
 
-	config := bot.ClientConfig{}
+	config := bot2.ClientConfig{}
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&config.Homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
@@ -136,7 +136,7 @@ func main() {
 	log.Printf("Connecting to Matrix homeserver at %s as %s, and to Alertmanager at %s",
 		config.Homeserver, config.UserID, config.AlertManagerURL)
 
-	client, err := bot.NewClient(&config, formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile))
+	client, err := bot2.NewClient(&config, formatter(colorFile, iconFile, htmlTemplateFile, textTemplateFile))
 	if err != nil {
 		log.Fatalf("Error connecting to Matrix: %s", err)
 	}
