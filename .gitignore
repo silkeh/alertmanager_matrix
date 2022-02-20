@@ -1,4 +1,4 @@
-alertmanager_matrix
+/alertmanager_matrix
 alertmanager_matrix.service
 bin
 *.tar.gz
