@@ -81,3 +81,24 @@ build:
   artifacts:
     paths:
       - alertmanager_matrix
+
+sources:
+  stage: build
+  script:
+    - go mod vendor
+    - tar --exclude-from=.gitignore -caf sources.tar.gz *
+  artifacts:
+    paths:
+      - sources.tar.gz
+
+package rpm:
+  stage: build
+  needs: [sources]
+  image: fedora
+  script:
+    - dnf -q -y --setopt=install_weak_deps=False install git golang fedora-packager rpmdevtools
+    - make rpm
+  artifacts:
+    paths:
+      - "*.rpm"
+      - "**/*.rpm"
