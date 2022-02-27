@@ -238,7 +238,7 @@ func (c *Client) NewSilence(author, durationStr string, matchers string) string 
 	}
 
 	// Check if an ID is given instead of matchers
-	if len(matchers) == 1 && !strings.ContainsAny(matchers, `=~`) {
+	if !strings.ContainsAny(matchers, `{"=~!}`) {
 		res := c.addSilenceForFingerprint(&silence, matchers)
 		if res != "" {
 			return res
