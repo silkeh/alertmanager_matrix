@@ -1,7 +1,7 @@
 ---
 include:
   - project: silkeh/pipelines
-    ref: initial-pipelines
+    ref: main
     file:
       - golang.gitlab-ci.yml
 
