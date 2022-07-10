@@ -47,7 +47,6 @@ linters-settings:
       - fieldalignment  # misalignment is accepted
 
   revive:
-    enable-all-rules: true
     rules: # see https://github.com/mgechev/revive#recommended-configuration
       - name: exported
       - name: blank-imports
