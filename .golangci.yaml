@@ -6,17 +6,19 @@ run:
 linters:
   enable-all: true
   disable:
-    - testpackage       # tests are allowed in the same package
-    - tagliatelle       # json schema of Matrix specs is followed
-    - exhaustivestruct  # structs may be uninitialized
-    - nlreturn          # covered by wsl cuddle rules
-    - paralleltest      # tests are acceptable in sequence
-    - nakedret          # naked returns are acceptable
+    - testpackage     # tests are allowed in the same package
+    - tagliatelle     # json schema of Matrix specs is followed
+    - exhaustruct     # structs may be uninitialized
+    - nlreturn        # covered by wsl cuddle rules
+    - paralleltest    # tests are acceptable in sequence
+    - nakedret        # naked returns are acceptable
+    - nonamedreturns  # named returns are acceptable
     # deprecated
     - scopelint
     - interfacer
     - maligned
     - golint
+    - exhaustivestruct
 
 severity:
   default-severity: major
@@ -34,8 +36,11 @@ linters-settings:
   varnamelen:
     min-name-length: 1
 
-  goimports:
-    local-prefixes: github.com/silkeh/alertmanager_matrix
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/silkeh/alertmanager_matrix)
 
   gosec:
     excludes:
