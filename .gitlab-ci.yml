@@ -1,9 +1,9 @@
 ---
 include:
   - project: silkeh/pipelines
-    ref: main
     file:
       - golang.gitlab-ci.yml
+      - builds/docker-buildx.gitlab-ci.yml
 
 variables:
   PACKAGE_REGISTRY_URL:
