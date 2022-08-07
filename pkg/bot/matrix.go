@@ -10,7 +10,6 @@ import (
 
 	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/prometheus/alertmanager/types"
-
 	bot "gitlab.com/silkeh/matrix-bot"
 
 	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"

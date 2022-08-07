@@ -13,13 +13,13 @@ import (
 
 // Default alert template values.
 const (
-	DefaultTextTemplate = "{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint \"\"}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}"                                                                              // nolint:lll
-	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}` // nolint:lll
+	DefaultTextTemplate = "{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint \"\"}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}"                                                                              //nolint:lll
+	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}` //nolint:lll
 )
 
 // Default color and icon values.
 var (
-	DefaultColors = map[string]string{ // nolint:gochecknoglobals
+	DefaultColors = map[string]string{ //nolint:gochecknoglobals
 		"alert":       "black",
 		"information": "blue",
 		"warning":     "orange",
@@ -28,7 +28,7 @@ var (
 		"silenced":    "gray",
 	}
 
-	DefaultIcons = map[string]string{ // nolint:gochecknoglobals
+	DefaultIcons = map[string]string{ //nolint:gochecknoglobals
 		"alert":       "🔔️",
 		"information": "ℹ️",
 		"warning":     "⚠️",
@@ -51,12 +51,11 @@ type Formatter struct {
 //
 // The following functions are registered for use in the templates:
 //
-//   icon:  returns the icon for the given string.
-//   color: returns the color for the given string.
-//   upper: converts the given string to uppercase.
-//   lower: converts the given string to lowercase.
-//   title: converts the given string to title case.
-//
+//	icon:  returns the icon for the given string.
+//	color: returns the color for the given string.
+//	upper: converts the given string to uppercase.
+//	lower: converts the given string to lowercase.
+//	title: converts the given string to title case.
 func NewFormatter(textTemplate, htmlTemplate string, colors, icons map[string]string) *Formatter {
 	if textTemplate == "" {
 		textTemplate = DefaultTextTemplate

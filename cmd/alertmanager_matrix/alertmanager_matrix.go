@@ -50,7 +50,7 @@ func setStringFromEnv(target *string, env string) {
 }
 
 func loadFile(fileName string) string {
-	contents, err := os.ReadFile(fileName) // nolint:gosec // contents inclusion is the point
+	contents, err := os.ReadFile(fileName) //nolint:gosec // contents inclusion is the point
 	if err != nil {
 		log.Fatalf("Unable to read file %q: %s", fileName, err)
 	}
@@ -59,7 +59,7 @@ func loadFile(fileName string) string {
 }
 
 func mapFromYAMLFile(fileName string) map[string]string {
-	file, err := os.Open(fileName) // nolint:gosec // file inclusion is the point
+	file, err := os.Open(fileName) //nolint:gosec // file inclusion is the point
 	if err != nil {
 		log.Fatalf("Unable to open YAML file %q: %s", fileName, err)
 	}
