@@ -10,6 +10,7 @@ import (
 
 	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/prometheus/alertmanager/types"
+
 	bot "gitlab.com/silkeh/matrix-bot"
 
 	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"
@@ -182,11 +183,13 @@ func (c *Client) Run() error {
 
 // joinRooms joins a list of room IDs or aliases.
 func (c *Client) joinRooms(roomList []string) error {
-	for _, r := range roomList {
-		err := c.Matrix.NewRoom(r).Join()
+	for i, r := range roomList {
+		id, err := c.Matrix.NewRoom(r).Join()
 		if err != nil {
-			return fmt.Errorf("cannot join room: %w", err)
+			return fmt.Errorf("cannot join room %q: %w", r, err)
 		}
+
+		roomList[i] = id
 	}
 
 	return nil

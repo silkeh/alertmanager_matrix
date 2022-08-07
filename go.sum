@@ -447,6 +447,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 gitlab.com/silkeh/matrix-bot v0.0.0-20220108152249-8b2d6ecea043 h1:UBARlLXJ4YlmE+r7TQalnvsaail8AZcUdVEZq+sEfxk=
 gitlab.com/silkeh/matrix-bot v0.0.0-20220108152249-8b2d6ecea043/go.mod h1:BDSjkfO7UAoFDktPwlC1ASQJCESjEfbbI6FmtRce6NY=
+gitlab.com/silkeh/matrix-bot v0.1.0 h1:baiwhVjb/ay4xwwpi5G1I9IXjtvgZsRyQgh8WzimrbY=
+gitlab.com/silkeh/matrix-bot v0.1.0/go.mod h1:BDSjkfO7UAoFDktPwlC1ASQJCESjEfbbI6FmtRce6NY=
 go.mongodb.org/mongo-driver v1.0.3/go.mod h1:u7ryQJ+DOzQmeO7zB6MHyr8jkEQvC8vH7qLUO4lqsUM=
 go.mongodb.org/mongo-driver v1.1.1/go.mod h1:u7ryQJ+DOzQmeO7zB6MHyr8jkEQvC8vH7qLUO4lqsUM=
 go.mongodb.org/mongo-driver v1.3.0/go.mod h1:MSWZXKOynuguX+JSvwP8i+58jYCXxbia8HS3gZBapIE=
