@@ -144,7 +144,7 @@ func (c *Client) silenceCommand() *bot.Command {
 				Summary: "Create a silence.",
 				Description: "Create a silence	using a `duration` and `matcher` or `fingerprint`.\n\n" +
 					"A matcher matches job labels, for example: \n" +
-					"```\nsilence add 1h job=\"test\" target=~\"test.*\"\n```\n" +
+					"```\nsilence add 1h job=\"test\",target=~\"test.*\"\n```\n" +
 					"Alternative, an alert fingerprint can be given to match all labels of that alert, for example:\n" +
 					"```\nsilence add 1h 04e45af092081699\n```\n",
 				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
