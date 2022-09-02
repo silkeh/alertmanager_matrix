@@ -14,7 +14,7 @@ import (
 	bot2 "github.com/silkeh/alertmanager_matrix/pkg/bot"
 )
 
-func requestHandler(client *bot2.Client, w http.ResponseWriter, r *http.Request) {
+func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter, r *http.Request) {
 	// Get room from request
 	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
 	if room.ID == "" || room.ID[0] != '!' {
@@ -34,7 +34,7 @@ func requestHandler(client *bot2.Client, w http.ResponseWriter, r *http.Request)
 	}
 
 	// Create readable messages for Matrix
-	plain, html := client.Formatter.FormatAlerts(data.Alerts, false)
+	plain, html := client.Formatter.FormatAlerts(data.Alerts, alertLabels)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
 	if _, err := room.SendHTML(plain, html); err != nil {
@@ -107,6 +107,7 @@ func main() {
 	var addr, iconFile, colorFile, htmlTemplateFile, textTemplateFile string
 
 	config := bot2.ClientConfig{}
+	alertLabels := false
 
 	flag.StringVar(&addr, "addr", ":4051", "Address to listen on.")
 	flag.StringVar(&config.Homeserver, "homeserver", "http://localhost:8008", "Homeserver to connect to.")
@@ -119,6 +120,7 @@ func main() {
 	flag.StringVar(&colorFile, "color-file", "", "YAML file with colors for message types.")
 	flag.StringVar(&htmlTemplateFile, "html-template", "", "HTML template for alert messages.")
 	flag.StringVar(&textTemplateFile, "text-template", "", "Plain-text template for alert messages.")
+	flag.BoolVar(&alertLabels, "show-labels", false, "show labels of alerts messages.")
 	flag.Parse()
 
 	// Set variables from the environment
@@ -148,7 +150,7 @@ func main() {
 
 	// Create the HTTP handler
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		requestHandler(client, w, r)
+		requestHandler(client, alertLabels, w, r)
 	}
 
 	// Create/start HTTP server
