@@ -25,6 +25,7 @@ var (
 		"info":        "blue",
 		"warning":     "orange",
 		"critical":    "red",
+		"error":       "red",
 		"resolved":    "green",
 		"silenced":    "gray",
 	}
@@ -35,6 +36,7 @@ var (
 		"info":        "ℹ️",
 		"warning":     "⚠️",
 		"critical":    "🚨",
+		"error":       "🚨",
 		"resolved":    "✅",
 		"silenced":    "🔕",
 	}
