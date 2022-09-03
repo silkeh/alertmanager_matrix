@@ -22,8 +22,10 @@ var (
 	DefaultColors = map[string]string{ //nolint:gochecknoglobals
 		"alert":       "black",
 		"information": "blue",
+		"info":        "blue",
 		"warning":     "orange",
 		"critical":    "red",
+		"error":       "red",
 		"resolved":    "green",
 		"silenced":    "gray",
 	}
@@ -31,8 +33,10 @@ var (
 	DefaultIcons = map[string]string{ //nolint:gochecknoglobals
 		"alert":       "🔔️",
 		"information": "ℹ️",
+		"info":        "ℹ️",
 		"warning":     "⚠️",
 		"critical":    "🚨",
+		"error":       "🚨",
 		"resolved":    "✅",
 		"silenced":    "🔕",
 	}
