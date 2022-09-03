@@ -1,3 +1,4 @@
+// Package main contains the main application for managing and receiving Alertmanager alerts on Matrix.
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
@@ -155,7 +157,10 @@ func main() {
 
 	// Create/start HTTP server
 	r := mux.NewRouter()
+	server := &http.Server{Addr: addr, Handler: r, ReadTimeout: time.Second}
+
 	r.HandleFunc("/{room}", handler).Methods("POST")
+
 	log.Print("Listening on ", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	log.Fatal(server.ListenAndServe())
 }
