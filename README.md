@@ -38,5 +38,5 @@ The icons and colors define the behaviour of the built-in `icon` and `color` tem
 They can be configured by providing a YAML file using `-icon-file` and `-color-file` respectively.
 See [the documentation][variables] for the default values.
 
-[constants]: https://pkg.go.dev/github.com/silkeh/alertmanager_matrix/bot#pkg-constants
-[variables]: https://pkg.go.dev/github.com/silkeh/alertmanager_matrix/bot#pkg-variables
+[constants]: https://pkg.go.dev/gitlab.com/slxh/matrix/alertmanager_matrix/bot#pkg-constants
+[variables]: https://pkg.go.dev/gitlab.com/slxh/matrix/alertmanager_matrix/bot#pkg-variables

@@ -1,6 +1,6 @@
 ---
 include:
-  - project: silkeh/pipelines
+  - project: slxh/pipelines
     file:
       - golang.gitlab-ci.yml
       - builds/docker-buildx.gitlab-ci.yml

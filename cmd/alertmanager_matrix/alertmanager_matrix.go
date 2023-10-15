@@ -12,8 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v3"
 
-	"github.com/silkeh/alertmanager_matrix/pkg/alertmanager"
-	bot2 "github.com/silkeh/alertmanager_matrix/pkg/bot"
+	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
+	bot2 "gitlab.com/slxh/matrix/alertmanager_matrix/pkg/bot"
 )
 
 func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter, r *http.Request) {
