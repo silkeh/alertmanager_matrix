@@ -98,6 +98,11 @@ linters-settings:
   stylecheck:
     checks: [all]
 
+  tagliatelle:
+    case:
+      rules:
+        json: goCamel
+
   wrapcheck:
     ignoreSigs:
       - .Errorf(

@@ -52,7 +52,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 	// Create Alertmanager client
 	client.Alertmanager, err = alertmanager.NewClient(config.AlertManagerURL)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("error creating Alertmanager client: %w", err)
 	}
 
 	// Matrix bot config
@@ -65,7 +65,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 	// Create Matrix client
 	client.Matrix, err = bot.NewClient(config.Homeserver, config.UserID, config.Token, matrixConfig)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("error creating Matrix client: %w", err)
 	}
 
 	// Create room list
@@ -78,7 +78,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 	client.Matrix.SetCommand("list", client.listCommand())
 	client.Matrix.SetCommand("silence", client.silenceCommand())
 
-	return
+	return client, nil
 }
 
 // mainCommand returns the `alert` bot command.

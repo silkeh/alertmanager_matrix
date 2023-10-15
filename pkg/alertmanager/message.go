@@ -20,15 +20,15 @@ const (
 
 // Message represents a message received from Alertmanager via webhook.
 type Message struct {
-	Version           string
-	GroupKey          string
-	Status            string
-	Receiver          string
-	GroupLabels       map[string]string
-	CommonLabels      map[string]string
-	CommonAnnotations map[string]string
-	ExternalURL       string
-	Alerts            []*Alert
+	Version           string            `json:"version"`
+	GroupKey          string            `json:"groupKey"`
+	Status            string            `json:"status"`
+	Receiver          string            `json:"receiver"`
+	GroupLabels       map[string]string `json:"groupLabels"`
+	CommonLabels      map[string]string `json:"commonLabels"`
+	CommonAnnotations map[string]string `json:"commonAnnotations"`
+	ExternalURL       string            `json:"externalURL"`
+	Alerts            []*Alert          `json:"alerts"`
 }
 
 // Alert represents an Alert received from Alertmanager via webhook.
