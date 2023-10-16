@@ -33,6 +33,7 @@ The service will *not* automatically join the room given in a webhook.
 
 The alert messages can be customized by providing custom templates using the `-text-template` and `-html-template` flags.
 The built-in default templates can be found in [the documentation][constants].
+[Sprig functions][sprig] can be used in templates.
 
 The icons and colors define the behaviour of the built-in `icon` and `color` templating functions.
 They can be configured by providing a YAML file using `-icon-file` and `-color-file` respectively.
@@ -40,3 +41,4 @@ See [the documentation][variables] for the default values.
 
 [constants]: https://pkg.go.dev/gitlab.com/slxh/matrix/alertmanager_matrix/bot#pkg-constants
 [variables]: https://pkg.go.dev/gitlab.com/slxh/matrix/alertmanager_matrix/bot#pkg-variables
+[sprig]: http://masterminds.github.io/sprig/

@@ -6,6 +6,7 @@ import (
 	"strings"
 	text "text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/prometheus/alertmanager/types"
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
@@ -85,8 +86,8 @@ func NewFormatter(textTemplate, htmlTemplate string, colors, icons map[string]st
 		"lower": strings.ToLower,
 		"title": strings.ToTitle,
 	}
-	f.text = text.Must(text.New("").Funcs(funcMap).Parse(textTemplate))
-	f.html = html.Must(html.New("").Funcs(funcMap).Parse(htmlTemplate))
+	f.text = text.Must(text.New("").Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(textTemplate))
+	f.html = html.Must(html.New("").Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(htmlTemplate))
 
 	return f
 }
