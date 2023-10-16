@@ -1,15 +1,13 @@
 package bot
 
 import (
-	"fmt"
+	"bytes"
+	_ "embed"
 	html "html/template"
 	"strings"
 	text "text/template"
-	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/prometheus/alertmanager/api/v2/models"
-	"github.com/prometheus/alertmanager/pkg/labels"
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/internal/util"
 	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
@@ -20,6 +18,9 @@ const (
 	DefaultTextTemplate = `{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}`                                                                                //nolint:lll
 	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}` //nolint:lll
 )
+
+//go:embed templates/silence.md.tmpl
+var silenceTemplate string
 
 // Default color and icon values.
 var (
@@ -48,10 +49,11 @@ var (
 
 // Formatter represents a NewMessage formatter with an icon and color set.
 type Formatter struct {
-	colors map[string]string
-	icons  map[string]string
-	text   *text.Template
-	html   *html.Template
+	colors  map[string]string
+	icons   map[string]string
+	text    *text.Template
+	html    *html.Template
+	silence *text.Template
 }
 
 // NewFormatter creates a new formatter with the given text/HTML templates, colors and strings.
@@ -92,6 +94,7 @@ func NewFormatter(textTemplate, htmlTemplate string, colors, icons map[string]st
 	}
 	f.text = text.Must(text.New("").Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(textTemplate))
 	f.html = html.Must(html.New("").Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(htmlTemplate))
+	f.silence = text.Must(text.New("").Funcs(sprig.FuncMap()).Funcs(funcMap).Parse(silenceTemplate))
 
 	return f
 }
@@ -132,52 +135,19 @@ func (f *Formatter) FormatAlerts(alerts []*alertmanager.Alert, labels bool) (str
 }
 
 // FormatSilences formats silences as Markdown.
-func (f *Formatter) FormatSilences(silences []*models.GettableSilence, state string) (md string) {
+func (f *Formatter) FormatSilences(silences []alertmanager.Silence, state string) (md string) {
+	buf := &bytes.Buffer{}
+	filtered := make([]alertmanager.Silence, 0, len(silences))
+
 	for _, s := range silences {
-		if util.ValueOrDefault(s.Status.State) != state {
-			continue
-		}
-
-		endStr := "Ends"
-		if util.ValueOrDefault(s.Status.State) == "expired" {
-			endStr = "Ended"
-		}
-
-		md += fmt.Sprintf(
-			"**Silence %s**  \n%s at %s  \nMatches:`%s`\n\n",
-			util.ValueOrDefault(s.ID),
-			endStr,
-			time.Time(util.ValueOrDefault(s.EndsAt)).Format("2006-01-02 15:04:05 MST"),
-			decodeMatchers(s.Matchers).String(),
-		)
-	}
-
-	return md
-}
-
-func decodeMatchers(matchers models.Matchers) labels.Matchers {
-	ms := make(labels.Matchers, len(matchers))
-
-	for i, m := range matchers {
-		ms[i] = &labels.Matcher{
-			Type:  matcherType(util.ValueOrDefault(m.IsEqual), util.ValueOrDefault(m.IsRegex)),
-			Name:  util.ValueOrDefault(m.Name),
-			Value: util.ValueOrDefault(m.Value),
+		if s.Status() == state {
+			filtered = append(filtered, s)
 		}
 	}
 
-	return ms
-}
-
-func matcherType(isEqual, isRegex bool) labels.MatchType {
-	switch {
-	case isRegex && isEqual:
-		return labels.MatchRegexp
-	case isRegex && !isEqual:
-		return labels.MatchNotRegexp
-	case isEqual:
-		return labels.MatchEqual
-	default:
-		return labels.MatchNotEqual
+	if err := f.silence.Execute(buf, filtered); err != nil {
+		return err.Error()
 	}
+
+	return buf.String()
 }

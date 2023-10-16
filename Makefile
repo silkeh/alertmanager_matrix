@@ -7,7 +7,7 @@ PROGNAME   ?= alertmanager_matrix
 
 all: $(PROGNAME) $(PROGNAME).service
 
-$(PROGNAME): $(wildcard */*/*.go)
+$(PROGNAME): $(shell find . -name "*.go") $(shell find -name "*.tmpl")
 	@mkdir -p $(@D)
 	go build -o $@ ./cmd/$(PROGNAME)
 

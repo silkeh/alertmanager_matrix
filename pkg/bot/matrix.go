@@ -234,17 +234,21 @@ func (c *Client) NewSilence(ctx context.Context, author, durationStr string, mat
 		return err.Error()
 	}
 
-	silence := models.Silence{
-		Matchers:  make(models.Matchers, 0, len(matchers)),
-		StartsAt:  util.PtrTo(strfmt.DateTime(time.Now())),
-		EndsAt:    util.PtrTo(strfmt.DateTime(time.Now().Add(duration))),
-		CreatedBy: &author,
-		Comment:   util.PtrTo("Created from Matrix"),
+	silence := alertmanager.Silence{
+		GettableSilence: &models.GettableSilence{
+			Silence: models.Silence{
+				Matchers:  make(models.Matchers, 0, len(matchers)),
+				StartsAt:  util.PtrTo(strfmt.DateTime(time.Now())),
+				EndsAt:    util.PtrTo(strfmt.DateTime(time.Now().Add(duration))),
+				CreatedBy: &author,
+				Comment:   util.PtrTo("Created from Matrix"),
+			},
+		},
 	}
 
 	// Check if an ID is given instead of matchers
 	if !strings.ContainsAny(matchers, `{"=~!}`) {
-		res := c.addSilenceForFingerprint(ctx, &silence, matchers)
+		res := c.addSilenceForFingerprint(ctx, &silence.Silence, matchers)
 		if res != "" {
 			return res
 		}
@@ -254,7 +258,7 @@ func (c *Client) NewSilence(ctx context.Context, author, durationStr string, mat
 			return fmt.Sprintf("Invalid matchers: %s", parseErr)
 		}
 
-		silence.Matchers = encodeMatchers(ms)
+		silence.SetMatchers(ms)
 	}
 
 	id, err := c.Alertmanager.CreateSilence(ctx, silence)
@@ -263,21 +267,6 @@ func (c *Client) NewSilence(ctx context.Context, author, durationStr string, mat
 	}
 
 	return fmt.Sprintf("Silence created with ID *%s*", id)
-}
-
-func encodeMatchers(matchers labels.Matchers) models.Matchers {
-	ms := make(models.Matchers, len(matchers))
-
-	for i, m := range matchers {
-		ms[i] = &models.Matcher{
-			IsEqual: util.PtrTo(m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp),
-			IsRegex: util.PtrTo(m.Type == labels.MatchRegexp || m.Type == labels.MatchNotRegexp),
-			Name:    util.PtrTo(m.Name),
-			Value:   util.PtrTo(m.Value),
-		}
-	}
-
-	return ms
 }
 
 func (c *Client) addSilenceForFingerprint(ctx context.Context, silence *models.Silence, fingerprint string) string {

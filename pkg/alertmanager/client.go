@@ -87,19 +87,25 @@ func (am *Client) GetAlert(ctx context.Context, id string) (alert *Alert, err er
 }
 
 // GetSilences returns a list of silences from Alertmanager.
-func (am *Client) GetSilences(ctx context.Context) ([]*models.GettableSilence, error) {
+func (am *Client) GetSilences(ctx context.Context) ([]Silence, error) {
 	silencesResp, err := am.API.Silence.GetSilences(&silence.GetSilencesParams{Context: ctx})
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving silences: %w", err)
 	}
 
-	return silencesResp.GetPayload(), nil
+	silences := make([]Silence, len(silencesResp.GetPayload()))
+
+	for i, s := range silencesResp.GetPayload() {
+		silences[i] = Silence{GettableSilence: s}
+	}
+
+	return silences, nil
 }
 
 // CreateSilence creates the given silence.
-func (am *Client) CreateSilence(ctx context.Context, s models.Silence) (string, error) {
+func (am *Client) CreateSilence(ctx context.Context, s Silence) (string, error) {
 	resp, err := am.API.Silence.PostSilences(&silence.PostSilencesParams{
-		Silence: &models.PostableSilence{Silence: s},
+		Silence: &models.PostableSilence{Silence: s.GettableSilence.Silence},
 		Context: ctx,
 	})
 	if err != nil {
