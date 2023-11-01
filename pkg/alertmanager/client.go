@@ -5,12 +5,14 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/go-openapi/strfmt"
 	alertmanager "github.com/prometheus/alertmanager/api/v2/client"
 	"github.com/prometheus/alertmanager/api/v2/client/alert"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
+	"github.com/prometheus/alertmanager/template"
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/internal/util"
 )
@@ -61,8 +63,15 @@ func (am *Client) GetAlerts(ctx context.Context, silenced bool) ([]*Alert, error
 	as := make([]*Alert, len(alerts))
 	for i, a := range alerts {
 		as[i] = &Alert{
-			GettableAlert: a,
-			Status:        util.ValueOrDefault(a.Status.State),
+			Alert: &template.Alert{
+				Status:       util.ValueOrDefault(a.Status.State),
+				Labels:       template.KV(a.Labels),
+				Annotations:  template.KV(a.Annotations),
+				StartsAt:     time.Time(util.ValueOrDefault(a.StartsAt)),
+				EndsAt:       time.Time(util.ValueOrDefault(a.EndsAt)),
+				GeneratorURL: string(a.GeneratorURL),
+				Fingerprint:  util.ValueOrDefault(a.Fingerprint),
+			},
 		}
 	}
 
@@ -77,7 +86,7 @@ func (am *Client) GetAlert(ctx context.Context, id string) (alert *Alert, err er
 	}
 
 	for _, a := range alerts {
-		if a.Fingerprint() == id {
+		if a.Fingerprint == id {
 			alert = a
 			break
 		}
