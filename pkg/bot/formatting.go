@@ -15,7 +15,7 @@ import (
 
 // Default alert template values.
 const (
-	DefaultTextTemplate = `{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}`                                                                                //nolint:lll
+	DefaultTextTemplate = "{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint ``}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}"                                                                                //nolint:lll
 	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}` //nolint:lll
 )
 
