@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/slxh/go/env"
 	"gopkg.in/yaml.v3"
+	mid "maunium.net/go/mautrix/id"
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
 	bot2 "gitlab.com/slxh/matrix/alertmanager_matrix/pkg/bot"
@@ -20,7 +22,7 @@ import (
 
 func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter, r *http.Request) {
 	// Get room from request
-	room := client.Matrix.NewRoom(mux.Vars(r)["room"])
+	room := client.Matrix.NewRoom(mid.RoomID(mux.Vars(r)["room"]))
 	if room.ID == "" || room.ID[0] != '!' {
 		log.Printf("Invalid room ID: %q", room.ID)
 		w.WriteHeader(http.StatusBadRequest)
@@ -41,7 +43,7 @@ func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter
 	plain, html := client.Formatter.FormatAlerts(data.Alerts, alertLabels)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
-	if _, err := room.SendHTML(plain, html); err != nil {
+	if _, err := room.SendHTML(context.Background(), plain, html); err != nil {
 		log.Printf("Error sending message: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}

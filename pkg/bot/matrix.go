@@ -12,6 +12,8 @@ import (
 	"github.com/prometheus/alertmanager/api/v2/models"
 	"github.com/prometheus/alertmanager/pkg/labels"
 	"gitlab.com/slxh/matrix/bot"
+	mevent "maunium.net/go/mautrix/event"
+	mid "maunium.net/go/mautrix/id"
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/internal/util"
 	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
@@ -34,6 +36,7 @@ type Client struct {
 	Matrix       *bot.Client
 	Alertmanager *alertmanager.Client
 	Formatter    *Formatter
+	startTime    time.Time
 }
 
 // NewClient creates and starts a new Alertmanager/Matrix client.
@@ -44,6 +47,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 
 	client = &Client{
 		Formatter: formatter,
+		startTime: time.Now(),
 	}
 
 	// Ensure a formatter is set
@@ -59,7 +63,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 
 	// Matrix bot config
 	matrixConfig := &bot.ClientConfig{
-		MessageType:      config.MessageType,
+		MessageType:      mevent.MessageType(config.MessageType),
 		CommandPrefixes:  []string{"!alert", "!alertmanager"},
 		IgnoreHighlights: false,
 	}
@@ -72,7 +76,9 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 
 	// Create room list
 	if config.Rooms != "" {
-		matrixConfig.AllowedRooms = strings.Split(config.Rooms, ",")
+		for _, room := range strings.Split(config.Rooms, ",") {
+			matrixConfig.AllowedRooms = append(matrixConfig.AllowedRooms, mid.RoomID(room))
+		}
 	}
 
 	// Register commands
@@ -87,7 +93,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 func (c *Client) listOnlyCommand() *bot.Command {
 	return &bot.Command{
 		Summary: "Show active alerts.",
-		MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+		MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 			return c.Alerts(context.Background(), false, false)
 		},
 	}
@@ -99,13 +105,13 @@ func (c *Client) listCommand() *bot.Command {
 	cmd.Subcommands = map[string]*bot.Command{
 		"all": {
 			Summary: "Show active and silenced alerts.",
-			MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+			MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 				return c.Alerts(context.Background(), true, false)
 			},
 			Subcommands: map[string]*bot.Command{
 				"labels": {
 					Summary: "Shows label of active and silenced alerts.",
-					MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+					MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 						return c.Alerts(context.Background(), true, true)
 					},
 				},
@@ -113,7 +119,7 @@ func (c *Client) listCommand() *bot.Command {
 		},
 		"labels": {
 			Summary: "Show labels of active alerts.",
-			MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+			MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 				return c.Alerts(context.Background(), false, true)
 			},
 		},
@@ -126,19 +132,19 @@ func (c *Client) listCommand() *bot.Command {
 func (c *Client) silenceCommand() *bot.Command {
 	return &bot.Command{
 		Summary: "Show active silences.",
-		MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+		MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 			return bot.NewMarkdownMessage(c.Silences(context.Background(), "active"))
 		},
 		Subcommands: map[string]*bot.Command{
 			"pending": {
 				Summary: "Show pending silences.",
-				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 					return bot.NewMarkdownMessage(c.Silences(context.Background(), "pending"))
 				},
 			},
 			"expired": {
 				Summary: "Shows expired silences.",
-				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 					return bot.NewMarkdownMessage(c.Silences(context.Background(), "expired"))
 				},
 			},
@@ -149,18 +155,18 @@ func (c *Client) silenceCommand() *bot.Command {
 					"```\nsilence add 1h job=\"test\",target=~\"test.*\"\n```\n" +
 					"Alternative, an alert fingerprint can be given to match all labels of that alert, for example:\n" +
 					"```\nsilence add 1h 04e45af092081699\n```\n",
-				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 					if len(args) <= 1 {
 						return bot.NewTextMessage("Insufficient arguments.")
 					}
 
 					return bot.NewMarkdownMessage(c.NewSilence(context.Background(),
-						sender, args[0], strings.Join(args[1:], " ")))
+						sender.String(), args[0], strings.Join(args[1:], " ")))
 				},
 			},
 			"del": {
 				Summary: "Delete a silence by ID.",
-				MessageHandler: func(sender, cmd string, args ...string) *bot.Message {
+				MessageHandler: func(sender mid.UserID, cmd string, args ...string) *bot.Message {
 					return bot.NewMarkdownMessage(c.DelSilence(context.Background(), args))
 				},
 			},
@@ -170,12 +176,12 @@ func (c *Client) silenceCommand() *bot.Command {
 
 // Run the client in a blocking thread.
 func (c *Client) Run() error {
-	err := c.joinRooms(c.Matrix.Config.AllowedRooms)
+	err := c.joinRooms(context.Background(), c.Matrix.Config.AllowedRooms)
 	if err != nil {
 		return err
 	}
 
-	err = c.Matrix.Run()
+	err = c.Matrix.Run(context.Background())
 	if err != nil {
 		return fmt.Errorf("matrix error: %w", err)
 	}
@@ -184,9 +190,9 @@ func (c *Client) Run() error {
 }
 
 // joinRooms joins a list of room IDs or aliases.
-func (c *Client) joinRooms(roomList []string) error {
+func (c *Client) joinRooms(ctx context.Context, roomList []mid.RoomID) error {
 	for i, r := range roomList {
-		id, err := c.Matrix.NewRoom(r).Join()
+		id, err := c.Matrix.NewRoom(r).Join(ctx)
 		if err != nil {
 			return fmt.Errorf("cannot join room %q: %w", r, err)
 		}
