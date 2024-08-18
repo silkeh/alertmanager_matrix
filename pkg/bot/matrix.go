@@ -289,6 +289,7 @@ func (c *Client) addSilenceForFingerprint(ctx context.Context, silence *models.S
 	for name, value := range alert.Labels {
 		silence.Matchers = append(silence.Matchers, &models.Matcher{
 			IsEqual: util.PtrTo(true),
+			IsRegex: util.PtrTo(false),
 			Name:    util.PtrTo(name),
 			Value:   util.PtrTo(value),
 		})
