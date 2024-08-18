@@ -160,8 +160,10 @@ func (c *Client) silenceCommand() *bot.Command {
 						return bot.NewTextMessage("Insufficient arguments.")
 					}
 
+					matchers, comments := splitArgs(args[1:])
+
 					return bot.NewMarkdownMessage(c.NewSilence(context.Background(),
-						sender.String(), args[0], strings.Join(args[1:], " ")))
+						sender.String(), args[0], matchers, comments))
 				},
 			},
 			"del": {
@@ -172,6 +174,20 @@ func (c *Client) silenceCommand() *bot.Command {
 			},
 		},
 	}
+}
+
+func splitArgs(args []string) (matcherStr, commentStr string) {
+	var matchers, comments []string
+
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "\n") {
+			comments = append(comments, arg[1:])
+		} else {
+			matchers = append(matchers, arg)
+		}
+	}
+
+	return strings.Join(matchers, " "), strings.Join(comments, "\n")
 }
 
 // Run the client in a blocking thread.
@@ -234,10 +250,14 @@ func (c *Client) Silences(ctx context.Context, state string) string {
 }
 
 // NewSilence creates a new silence and returns the ID.
-func (c *Client) NewSilence(ctx context.Context, author, durationStr string, matchers string) string {
+func (c *Client) NewSilence(ctx context.Context, author, durationStr, matchers, comment string) string {
 	duration, err := parseDuration(durationStr)
 	if err != nil {
 		return err.Error()
+	}
+
+	if comment == "" {
+		comment = "Created from Matrix"
 	}
 
 	silence := alertmanager.Silence{
@@ -247,7 +267,7 @@ func (c *Client) NewSilence(ctx context.Context, author, durationStr string, mat
 				StartsAt:  util.PtrTo(strfmt.DateTime(time.Now())),
 				EndsAt:    util.PtrTo(strfmt.DateTime(time.Now().Add(duration))),
 				CreatedBy: &author,
-				Comment:   util.PtrTo("Created from Matrix"),
+				Comment:   &comment,
 			},
 		},
 	}
