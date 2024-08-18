@@ -1,35 +1,19 @@
 ---
-run:
-  timeout: 5m
-  skip-dirs:
-    - .go
-
 linters:
   enable-all: true
   disable:
     - exhaustruct     # structs may be uninitialized
     - nlreturn        # covered by wsl cuddle rules
-    - paralleltest    # tests are acceptable in sequence
     - goimports       # conflicts with GCI
-    - depguard        # this project only has dependencies in the standard library
     - nonamedreturns  # named returns are acceptable in short functions
     # deprecated
-    - exhaustivestruct
-    - scopelint
-    - interfacer
-    - maligned
-    - golint
-    - structcheck
-    - varcheck
-    - deadcode
-    - nosnakecase
-    - ifshort
+    - gomnd
+    - execinquery
 
 severity:
   default-severity: major
 
 issues:
-  fast: false
   exclude-use-default: false
   exclude-case-sensitive: true
   exclude-rules:
@@ -42,16 +26,35 @@ issues:
         - goerr113
 
 linters-settings:
-  varnamelen:
-    min-name-length: 1
+  depguard:
+    rules:
+      main:
+        list-mode: strict
+        allow:
+          - $gostd
+          - github.com/go-openapi
+          - github.com/gorilla/mux
+          - github.com/prometheus/alertmanager
+          - github.com/Masterminds/sprig/v3
+          - gitlab.com/slxh/go/env
+          - gitlab.com/slxh/go/slogutil
+          - gitlab.com/slxh/matrix/alertmanager_matrix
+          - gitlab.com/slxh/matrix/bot
+          - maunium.net/go/mautrix
 
   gci:
     sections:
       - standard
       - default
-      - prefix(gitlab.com/slxh/matrix/alertmanager_matrix)
+      - localmodule
 
-  gomnd:
+  gosec:
+    excludes: []
+
+  govet:
+    enable-all: true
+
+  mnd:
     ignored-numbers:
       - '8'
       - '16'
@@ -59,59 +62,30 @@ linters-settings:
       - '64'
       - '10'
 
-  gosec:
-    excludes:
-      - G404
+  nolintlint:
+    require-explanation: true
 
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment  # misalignment is accepted
+  paralleltest:
+    ignore-missing: true
 
   revive:
-    enable-all-rules: false
-    rules:  # see https://github.com/mgechev/revive#recommended-configuration
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: var-naming
-      - name: var-declaration
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: time-naming
-      - name: unexported-return
-      - name: indent-error-flow
-      - name: errorf
-      - name: empty-block
-      - name: superfluous-else
-      - name: unused-parameter
-      - name: unreachable-code
-      - name: redefines-builtin-id
+    enable-all-rules: true
+    rules:
+      # conflicts with mnd
+      - name: add-constant
+        disabled: true
+      # named returns are acceptable in short functions
+      - name: bare-return
+        disabled: true
+      # conflicts with lll
+      - name: line-length-limit
+        disabled: true
+      # conflicts with errcheck
+      - name: unhandled-error
+        disabled: true
 
   stylecheck:
     checks: [all]
 
-  tagliatelle:
-    case:
-      rules:
-        json: goCamel
-
-  wrapcheck:
-    ignoreSigs:
-      - .Errorf(
-      - errors.New(
-      - errors.Unwrap(
-      - .Wrap(
-      - .Wrapf(
-      - .WithMessage(
-      - .WithMessagef(
-      - .WithStack(
-      - time.ParseDuration(
+  varnamelen:
+    min-name-length: 1

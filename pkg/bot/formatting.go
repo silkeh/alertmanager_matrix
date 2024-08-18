@@ -14,9 +14,11 @@ import (
 )
 
 // Default alert template values.
+//
+//nolint:lll // long templates
 const (
-	DefaultTextTemplate = "{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint ``}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}"                                                                                //nolint:lll
-	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}` //nolint:lll
+	DefaultTextTemplate = "{{ range .Alerts }}{{.StatusString|icon}} {{.StatusString|upper}} {{.AlertName}}: {{.Summary}}{{if ne .Fingerprint ``}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}, labels: {{.LabelString}}{{end}}\n{{ end -}}"
+	DefaultHTMLTemplate = `{{ range .Alerts }}<font color="{{.StatusString|color}}">{{.StatusString|icon}} <b>{{.StatusString|upper}}</b> {{.AlertName}}:</font> {{.Summary}}{{if ne .Fingerprint ""}} ({{.Fingerprint}}){{end}}{{if $.ShowLabels}}<br/><b>Labels:</b> <code>{{.LabelString}}</code>{{end}}<br/>{{- end -}}`
 )
 
 //go:embed templates/silence.md.tmpl
@@ -24,7 +26,7 @@ var silenceTemplate string
 
 // Default color and icon values.
 var (
-	DefaultColors = map[string]string{ //nolint:gochecknoglobals
+	DefaultColors = map[string]string{ //nolint:gochecknoglobals // used as constant
 		"alert":       "black",
 		"information": "blue",
 		"info":        "blue",
@@ -35,7 +37,7 @@ var (
 		"silenced":    "gray",
 	}
 
-	DefaultIcons = map[string]string{ //nolint:gochecknoglobals
+	DefaultIcons = map[string]string{ //nolint:gochecknoglobals // used as constant
 		"alert":       "🔔️",
 		"information": "ℹ️",
 		"info":        "ℹ️",
@@ -84,7 +86,7 @@ func NewFormatter(textTemplate, htmlTemplate string, colors, icons map[string]st
 	}
 
 	f := &Formatter{colors: colors, icons: icons}
-	funcMap := map[string]interface{}{
+	funcMap := map[string]any{
 		"icon":  f.icon,
 		"color": f.color,
 		"upper": strings.ToUpper,
@@ -118,20 +120,20 @@ func (f *Formatter) color(t string) string {
 }
 
 // FormatAlerts formats alerts as plain text and HTML.
-func (f *Formatter) FormatAlerts(alerts []*alertmanager.Alert, labels bool) (string, string) {
-	var plain, html strings.Builder
+func (f *Formatter) FormatAlerts(alerts []*alertmanager.Alert, showLabels bool) (plainContent, htmlContent string) {
+	var plainBuilder, htmlBuilder strings.Builder
 
-	message := &Message{Alerts: alerts, ShowLabels: labels}
+	message := &Message{Alerts: alerts, ShowLabels: showLabels}
 
-	if err := f.text.Execute(&plain, message); err != nil {
+	if err := f.text.Execute(&plainBuilder, message); err != nil {
 		return err.Error(), err.Error()
 	}
 
-	if err := f.html.Execute(&html, message); err != nil {
+	if err := f.html.Execute(&htmlBuilder, message); err != nil {
 		return err.Error(), err.Error()
 	}
 
-	return plain.String(), html.String()
+	return plainBuilder.String(), htmlBuilder.String()
 }
 
 // FormatSilences formats silences as Markdown.

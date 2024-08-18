@@ -3,6 +3,7 @@ package alertmanager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -16,6 +17,9 @@ import (
 
 	"gitlab.com/slxh/matrix/alertmanager_matrix/internal/util"
 )
+
+// ErrNoAlert is returned when no matching alert can be found.
+var ErrNoAlert = errors.New("no alert")
 
 // Client represents a multi-functional Alertmanager API client.
 type Client struct {
@@ -79,7 +83,7 @@ func (am *Client) GetAlerts(ctx context.Context, silenced bool) ([]*Alert, error
 }
 
 // GetAlert retrieves an alert with a given ID.
-func (am *Client) GetAlert(ctx context.Context, id string) (alert *Alert, err error) {
+func (am *Client) GetAlert(ctx context.Context, id string) (*Alert, error) {
 	alerts, err := am.GetAlerts(ctx, true)
 	if err != nil {
 		return nil, err
@@ -87,12 +91,11 @@ func (am *Client) GetAlert(ctx context.Context, id string) (alert *Alert, err er
 
 	for _, a := range alerts {
 		if a.Fingerprint == id {
-			alert = a
-			break
+			return a, nil
 		}
 	}
 
-	return
+	return nil, fmt.Errorf("%w with fingerprint %q", ErrNoAlert, id)
 }
 
 // GetSilences returns a list of silences from Alertmanager.

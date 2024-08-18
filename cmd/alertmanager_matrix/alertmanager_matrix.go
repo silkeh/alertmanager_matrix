@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"log"
@@ -43,22 +42,16 @@ func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter
 	plain, html := client.Formatter.FormatAlerts(data.Alerts, alertLabels)
 	log.Printf("Sending message to %s: %s", room.ID, plain)
 
-	if _, err := room.SendHTML(context.Background(), plain, html); err != nil {
+	if _, err := room.SendHTML(r.Context(), plain, html); err != nil {
 		log.Printf("Error sending message: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-func setStringFromEnv(target *string, env string) {
-	if str := os.Getenv(env); str != "" {
-		*target = str
 	}
 }
 
 func loadFile(fileName string) string {
 	contents, err := os.ReadFile(fileName) //nolint:gosec // contents inclusion is the point
 	if err != nil {
-		log.Fatalf("Unable to read file %q: %s", fileName, err)
+		log.Fatalf("Unable to read file %q: %s", fileName, err) //nolint:revive // only called in main()
 	}
 
 	return string(contents)
@@ -67,7 +60,7 @@ func loadFile(fileName string) string {
 func mapFromYAMLFile(fileName string) map[string]string {
 	file, err := os.Open(fileName) //nolint:gosec // file inclusion is the point
 	if err != nil {
-		log.Fatalf("Unable to open YAML file %q: %s", fileName, err)
+		log.Fatalf("Unable to open YAML file %q: %s", fileName, err) //nolint:revive // only called in main()
 	}
 
 	m := make(map[string]string)
@@ -76,7 +69,7 @@ func mapFromYAMLFile(fileName string) map[string]string {
 	if err != nil {
 		_ = file.Close()
 
-		log.Fatalf("Unable to parse YAML file %q: %s", fileName, err)
+		log.Fatalf("Unable to parse YAML file %q: %s", fileName, err) //nolint:revive // only called in main()
 	}
 
 	_ = file.Close()

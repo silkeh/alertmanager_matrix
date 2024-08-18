@@ -17,6 +17,8 @@ const (
 
 // parseDuration parses a duration in days weeks or years in addition to
 // the times parsed by time.ParseDuration.
+//
+//nolint:wrapcheck // strconv abstraction
 func parseDuration(s string) (time.Duration, error) {
 	m := durationRegex.FindStringSubmatch(s)
 	if m == nil {
