@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/prometheus/alertmanager v0.27.0
 	gitlab.com/slxh/go/env v1.1.0
-	gitlab.com/slxh/matrix/bot v0.3.0
+	gitlab.com/slxh/matrix/bot v0.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	maunium.net/go/mautrix v0.20.0
 )
@@ -58,7 +58,8 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matrix-org/gomatrix v0.0.0-20210324163249-be2af5ef2e16 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.41 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
@@ -74,12 +75,18 @@ require (
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/exporter-toolkit v0.11.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20200824052919-0d455de96546 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/tidwall/gjson v1.17.3 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
+	gitlab.com/slxh/go/slogutil v0.6.0 // indirect
 	go.mau.fi/util v0.7.0 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	go.opentelemetry.io/otel v1.17.0 // indirect
