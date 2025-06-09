@@ -365,6 +365,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 gitlab.com/slxh/go/env v1.1.0 h1:HOCW6o40GI8V6AE5GhsX1x3wcZwPve7Q3lXDPMIVrvA=
 gitlab.com/slxh/go/env v1.1.0/go.mod h1:ApyfFy6Azu3faux6ekFESPHdHT8zAN0W8QrEGqD2ejw=
+gitlab.com/slxh/go/env v1.2.0 h1:xQhseGCqLA1RK6SBoDXqtlfLOGvzxLeDY20riB0ullg=
+gitlab.com/slxh/go/env v1.2.0/go.mod h1:ApyfFy6Azu3faux6ekFESPHdHT8zAN0W8QrEGqD2ejw=
 gitlab.com/slxh/go/slogutil v0.6.0 h1:DW9/i/bukPckMtnez7R8Pd4VEVqnLpuZHcMZDWqCM6U=
 gitlab.com/slxh/go/slogutil v0.6.0/go.mod h1:OzwNHKv6kTmAgRvBX4PumbjOPp5DAj2BMAAJY3NYobE=
 gitlab.com/slxh/matrix/bot v0.4.0 h1:kNSB65OOfvg6E97g96MULCl6ooEJ72PcLPhsQG9yqCQ=
