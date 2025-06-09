@@ -6,6 +6,7 @@ include:
       - builds/docker-buildx.gitlab-ci.yml
 
 variables:
+  GOLANGCI_LINT_VERSION: v2.1
   PACKAGE_REGISTRY_URL:
     ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/alertmanager_matrix
   CGO_ENABLED: 0
