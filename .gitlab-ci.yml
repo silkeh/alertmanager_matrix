@@ -2,6 +2,7 @@
 include:
   - project: slxh/pipelines
     file:
+      - workflows/mr-pipelines.gitlab-ci.yml
       - golang.gitlab-ci.yml
       - builds/docker-buildx.gitlab-ci.yml
 
