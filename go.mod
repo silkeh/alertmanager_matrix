@@ -6,7 +6,7 @@ toolchain go1.24.6
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/go-openapi/strfmt v0.23.0
+	github.com/go-openapi/strfmt v0.24.0
 	github.com/gorilla/mux v1.8.1
 	github.com/prometheus/alertmanager v0.28.1
 	gitlab.com/slxh/go/env v1.2.0
@@ -34,7 +34,7 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
-	github.com/go-openapi/errors v0.22.0 // indirect
+	github.com/go-openapi/errors v0.22.3 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/loads v0.22.0 // indirect
@@ -42,6 +42,7 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-openapi/validate v0.24.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -96,7 +97,7 @@ require (
 	github.com/tidwall/sjson v1.2.5 // indirect
 	gitlab.com/slxh/go/slogutil v0.6.0 // indirect
 	go.mau.fi/util v0.9.1 // indirect
-	go.mongodb.org/mongo-driver v1.14.0 // indirect
+	go.mongodb.org/mongo-driver v1.17.4 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
