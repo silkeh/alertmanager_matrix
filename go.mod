@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/go-openapi/strfmt v0.25.0
 	github.com/gorilla/mux v1.8.1
-	github.com/prometheus/alertmanager v0.30.0
+	github.com/prometheus/alertmanager v0.30.1
 	gitlab.com/slxh/go/env v1.2.0
 	gitlab.com/slxh/matrix/bot v0.4.0
 	gopkg.in/yaml.v3 v3.0.1
