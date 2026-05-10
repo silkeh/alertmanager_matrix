@@ -27,7 +27,7 @@ build:
       - GOOS: openbsd
         GOARCH: [386, amd64, arm, arm64]
       - GOOS: windows
-        GOARCH: [386, amd64, arm, arm64]
+        GOARCH: [386, amd64, arm64]
   script:
     - go build -ldflags="-s -w" ./cmd/alertmanager_matrix
     - tar -cavf alertmanager_matrix-$GOOS-$GOARCH.tar.gz ./alertmanager_matrix*
