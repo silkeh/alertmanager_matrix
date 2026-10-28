@@ -16,7 +16,6 @@ import (
 	mevent "maunium.net/go/mautrix/event"
 	mid "maunium.net/go/mautrix/id"
 
-	"gitlab.com/slxh/matrix/alertmanager_matrix/internal/util"
 	"gitlab.com/slxh/matrix/alertmanager_matrix/pkg/alertmanager"
 )
 
@@ -77,7 +76,7 @@ func NewClient(config *ClientConfig, formatter *Formatter) (client *Client, err 
 
 	// Create room list
 	if config.Rooms != "" {
-		for _, room := range strings.Split(config.Rooms, ",") {
+		for room := range strings.SplitSeq(config.Rooms, ",") {
 			matrixConfig.AllowedRooms = append(matrixConfig.AllowedRooms, mid.RoomID(room))
 		}
 	}
@@ -261,10 +260,10 @@ func (c *Client) NewSilence(ctx context.Context, author, durationStr, matchers, 
 		GettableSilence: &models.GettableSilence{
 			Silence: models.Silence{
 				Matchers:  make(models.Matchers, 0, len(matchers)),
-				StartsAt:  util.PtrTo(strfmt.DateTime(time.Now())),
-				EndsAt:    util.PtrTo(strfmt.DateTime(time.Now().Add(duration))),
+				StartsAt:  new(strfmt.DateTime(time.Now())),
+				EndsAt:    new(strfmt.DateTime(time.Now().Add(duration))),
 				CreatedBy: &author,
-				Comment:   util.PtrTo(cmp.Or(comment, "Created from Matrix")),
+				Comment:   new(cmp.Or(comment, "Created from Matrix")),
 			},
 		},
 	}
@@ -301,10 +300,10 @@ func (c *Client) addSilenceForFingerprint(ctx context.Context, silence *models.S
 	silence.Matchers = make(models.Matchers, 0, len(alert.Labels))
 	for name, value := range alert.Labels {
 		silence.Matchers = append(silence.Matchers, &models.Matcher{
-			IsEqual: util.PtrTo(true),
-			IsRegex: util.PtrTo(false),
-			Name:    util.PtrTo(name),
-			Value:   util.PtrTo(value),
+			IsEqual: new(true),
+			IsRegex: new(false),
+			Name:    new(name),
+			Value:   new(value),
 		})
 	}
 

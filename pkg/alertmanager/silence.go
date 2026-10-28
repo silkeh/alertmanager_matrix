@@ -64,10 +64,10 @@ func encodeMatchers(matchers labels.Matchers) models.Matchers {
 
 	for i, m := range matchers {
 		ms[i] = &models.Matcher{
-			IsEqual: util.PtrTo(m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp),
-			IsRegex: util.PtrTo(m.Type == labels.MatchRegexp || m.Type == labels.MatchNotRegexp),
-			Name:    util.PtrTo(m.Name),
-			Value:   util.PtrTo(m.Value),
+			IsEqual: new(m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp),
+			IsRegex: new(m.Type == labels.MatchRegexp || m.Type == labels.MatchNotRegexp),
+			Name:    new(m.Name),
+			Value:   new(m.Value),
 		}
 	}
 

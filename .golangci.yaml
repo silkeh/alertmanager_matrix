@@ -26,10 +26,14 @@ formatters:
 linters:
   default: all
   disable:
-    - exhaustruct     # structs may be uninitialized
+    - exhaustruct_v5  # structs may be uninitialized
     - nlreturn        # covered by wsl cuddle rules
+    - noinlineerr     # inline errors are desired
     - nonamedreturns  # named returns are acceptable in short functions
     - funcorder       # functions are allowed in any order
+    - gomodguard      # deprecated
+    - exhaustruct     # deprecated
+    - wsl             # deprecated
   settings:
     depguard:
       rules:

@@ -22,6 +22,7 @@ const (
 // Message represents a message received from Alertmanager via webhook.
 type Message struct {
 	*webhook.Message
+
 	Alerts []*Alert `json:"alerts"`
 }
 

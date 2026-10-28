@@ -23,7 +23,7 @@ func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter
 	// Get room from request
 	room := client.Matrix.NewRoom(mid.RoomID(mux.Vars(r)["room"]))
 	if room.ID == "" || room.ID[0] != '!' {
-		log.Printf("Invalid room ID: %q", room.ID)
+		log.Printf("Invalid room ID: %q", room.ID) //nolint:gosec // quoted
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
@@ -40,7 +40,7 @@ func requestHandler(client *bot2.Client, alertLabels bool, w http.ResponseWriter
 
 	// Create readable messages for Matrix
 	plain, html := client.Formatter.FormatAlerts(data.Alerts, alertLabels)
-	log.Printf("Sending message to %s: %s", room.ID, plain)
+	log.Printf("Sending message to %q: %q", room.ID, plain) //nolint:gosec // quoted
 
 	if _, err := room.SendHTML(r.Context(), plain, html); err != nil {
 		log.Printf("Error sending message: %s", err)

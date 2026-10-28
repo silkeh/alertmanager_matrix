@@ -51,10 +51,10 @@ func NewClient(baseURL string) (*Client, error) {
 // GetAlerts retrieves all silenced or non-silenced alerts.
 func (am *Client) GetAlerts(ctx context.Context, silenced bool) ([]*Alert, error) {
 	alertResp, err := am.API.Alert.GetAlerts(&alert.GetAlertsParams{
-		Active:      util.PtrTo(true),
-		Inhibited:   util.PtrTo(false),
+		Active:      new(true),
+		Inhibited:   new(false),
 		Silenced:    &silenced,
-		Unprocessed: util.PtrTo(true),
+		Unprocessed: new(true),
 		Context:     ctx,
 	})
 	if err != nil {
