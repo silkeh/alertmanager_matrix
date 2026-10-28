@@ -1,15 +1,12 @@
 ---
 include:
-  - project: slxh/pipelines
-    file:
-      - workflows/mr-pipelines.gitlab-ci.yml
-      - golang.gitlab-ci.yml
-      - builds/docker-buildx.gitlab-ci.yml
+  - component: $CI_SERVER_FQDN/slxh/pipelines/go@main
+    inputs:
+      go_binaries: []
+      golangci_lint_version: v2.14
+      release_artifacts: '*.tar.gz *.rpm **/*.rpm'
 
 variables:
-  GOLANGCI_LINT_VERSION: v2.1
-  PACKAGE_REGISTRY_URL:
-    ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/alertmanager_matrix
   CGO_ENABLED: 0
 
 build:
@@ -57,23 +54,3 @@ package rpm:
     paths:
       - "*.rpm"
       - "**/*.rpm"
-
-release:
-  stage: deploy
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  script:
-    - apk add curl
-    - |
-      set -x
-      args=""
-      for i in *.tar.gz *.rpm **/*.rpm; do
-        url="${PACKAGE_REGISTRY_URL}/${CI_COMMIT_TAG}/$(basename "$i")"
-        args="${args} --assets-link {\"name\":\"$i\",\"url\":\"${url}\"}"
-        curl -sSf --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "$i" "${url}" || exit 1
-      done
-      release-cli create \
-        --name "Alertmanager Matrix $CI_COMMIT_TAG" \
-        --tag-name "$CI_COMMIT_TAG" \
-        $args
-  rules:
-    - if: $CI_COMMIT_TAG
