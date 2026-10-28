@@ -272,8 +272,8 @@ github.com/twmb/franz-go/pkg/kmsg v1.13.1 h1:fG5kItwysTk5UXqVwb64EpQEy3TydF3vYYK
 github.com/twmb/franz-go/pkg/kmsg v1.13.1/go.mod h1:+DPt4NC8RmI6hqb8G09+3giKObE6uD2Eya6CfqBpeJY=
 github.com/twmb/franz-go/plugin/kslog v1.0.0 h1:I64oEmF+0PDvmyLgwrlOtg4mfpSE9GwlcLxM4af2t60=
 github.com/twmb/franz-go/plugin/kslog v1.0.0/go.mod h1:8pMjK3OJJJNNYddBSbnXZkIK5dCKFIk9GcVVCDgvnQc=
-gitlab.com/slxh/go/env v1.2.0 h1:xQhseGCqLA1RK6SBoDXqtlfLOGvzxLeDY20riB0ullg=
-gitlab.com/slxh/go/env v1.2.0/go.mod h1:ApyfFy6Azu3faux6ekFESPHdHT8zAN0W8QrEGqD2ejw=
+gitlab.com/slxh/go/env v1.3.0 h1:0GMmzwRt5IehLkbm8XxXHrJX8AufLxvJo1e2+J6wpHw=
+gitlab.com/slxh/go/env v1.3.0/go.mod h1:ApyfFy6Azu3faux6ekFESPHdHT8zAN0W8QrEGqD2ejw=
 gitlab.com/slxh/go/slogutil v0.6.0 h1:DW9/i/bukPckMtnez7R8Pd4VEVqnLpuZHcMZDWqCM6U=
 gitlab.com/slxh/go/slogutil v0.6.0/go.mod h1:OzwNHKv6kTmAgRvBX4PumbjOPp5DAj2BMAAJY3NYobE=
 gitlab.com/slxh/matrix/bot v0.4.0 h1:kNSB65OOfvg6E97g96MULCl6ooEJ72PcLPhsQG9yqCQ=
